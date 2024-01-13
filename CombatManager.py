@@ -17,6 +17,7 @@ class CombatManager:
         Turn phase 0: Action Select: Fight, Item
 
         
+        
         FIGHT
         Turn phase 1: Select Target
         Turn phase 2: Select attack
