@@ -96,7 +96,6 @@ class HealthIncreaseItem(EquipmentItem):
     def UseItem(self, player):
         player.SetMaxHealth(player.GetMaxHealth() + self.hpBuff)
         player.SetHealth(player.GetHealth() + self.hpBuff)
-        self.quantity -= 1
 
     def DisableItem(self, player):
         player.SetMaxHealth(player.GetMaxHealth() - self.hpBuff)

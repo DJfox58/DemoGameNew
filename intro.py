@@ -15,7 +15,7 @@ screen : pgzero.screen.Screen
 WIDTH  = 1280
 HEIGHT = 1024
 
-
+mousePOS = []
 spriteC = SpriteConstants()
 class CombatManagerDraw:
     """This class contains various methods used to draw and display unit sprites and elements related to them
@@ -103,7 +103,23 @@ class InventoryManagerDraw:
     def AttachInventoryManager(self, inventoryManager):
         self.attachedInventoryManager = inventoryManager
 
+
+
+    def DrawInventoryHeaders(self):
+        """Draws the static headers to denote what the inventory values mean
+        """        
+        manager = self.attachedInventoryManager
+        xOrient = manager.inventoryBackground.left
+        yOrient = manager.inventoryBackground.top
+        screen.draw.text("Name", midleft = (xOrient + 110, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
+        screen.draw.text("Quantity", center = (xOrient+ 360, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
+        screen.draw.text("Weight", center = (xOrient+ 470, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
+        screen.draw.text("Value", center = (xOrient+ 580, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
+
+
     def DrawInventoryItems(self):
+        """Loops through the ordered item list in the inventoryManager and displays the items' sprites, names, and other values in the inventory
+        """        
         #x + 80
         #y + 130
 
@@ -111,26 +127,38 @@ class InventoryManagerDraw:
         xOrient = manager.inventoryBackground.left
         yOrient = manager.inventoryBackground.top
         invDraw = self.attachedInventoryManager.curInventoryOrder
-
-
-        screen.draw.text("Name", midleft = (xOrient + 110, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
-        screen.draw.text("Quantity", center = (xOrient+ 360, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
-        screen.draw.text("Weight", center = (xOrient+ 470, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
-        screen.draw.text("Value", center = (xOrient+ 580, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
         
+        itemOffset = self.attachedInventoryManager.inventoryOffset
+
+        for i in range(itemOffset, min(len(invDraw), itemOffset+5)):
+            fontColor = "black"
+            if i == manager.menuChoice:
+                fontColor = "white"
 
 
-
-        for i in range(len(invDraw)):
             item = invDraw[i]
-            screen.blit(item.spriteName, (xOrient + 80 - (images.gilded_cutlass.get_width()/2), yOrient + 130 - (images.gilded_cutlass.get_height()/2) + (i*70)))
+            screen.blit(item.spriteName, (xOrient + 80 - (images.gilded_cutlass.get_width()/2), yOrient + 130 - (images.gilded_cutlass.get_height()/2) + ((i - itemOffset) * 70)))
             #screen.blit("item_box_tsp", (xOrient + 80 - (images.gilded_cutlass.get_width()/2), yOrient + 130 - (images.gilded_cutlass.get_height()/2)))
-            screen.draw.text(str(item.itemName), midleft = (xOrient + 110, yOrient + 136 + (i*70)), color = "black", fontname = "old_englished_boots", fontsize = 35)
-            screen.draw.text(str(item.quantity), center = (xOrient+ 360, yOrient + 136 + (i*70)), color = "black", fontname = "old_englished_boots", fontsize = 35)
-            screen.draw.text(str(item.weight), center = (xOrient + 470, yOrient + 136 + (i*70)), color = "black", fontname = "old_englished_boots", fontsize = 35)
-            screen.draw.text(str(item.price), center = (xOrient + 580, yOrient + 136 + (i*70)), color = "black", fontname = "old_englished_boots", fontsize = 35)
+            screen.draw.text(str(item.itemName), midleft = (xOrient + 110, yOrient + 136 + ((i - itemOffset) * 70)), color = fontColor, fontname = "old_englished_boots", fontsize = 35)
+            screen.draw.text(str(item.quantity), center = (xOrient+ 360, yOrient + 136 + ((i - itemOffset) * 70)), color = fontColor, fontname = "old_englished_boots", fontsize = 35)
+            screen.draw.text(str(item.weight), center = (xOrient + 470, yOrient + 136 + ((i - itemOffset) * 70)), color = fontColor, fontname = "old_englished_boots", fontsize = 35)
+            screen.draw.text(str(item.price), center = (xOrient + 580, yOrient + 136 + ((i - itemOffset) * 70)), color = fontColor, fontname = "old_englished_boots", fontsize = 35)
             pass
 
+
+    def DrawSelectedItemDescription(self):
+        selectedItem = self.attachedInventoryManager.curInventoryOrder[self.attachedInventoryManager.menuChoice]
+        xOrient, yOrient = self.attachedInventoryManager.selectedItemBackground.topleft
+
+        #Draws the larger than normal item sprite
+        itemSprite = spriteC.selectedItemActors[selectedItem.spriteName]
+        itemSprite.topleft = (xOrient + 20, yOrient + 10)
+        itemSprite.draw()
+
+        screen.draw.text(selectedItem.itemName, (xOrient + 110, yOrient + 10), color = "black", fontname = "old_englished_boots", fontsize = 35)
+        screen.draw.text("Weight:" + str(selectedItem.weight), (xOrient + 110, yOrient + 60), color = "black", fontname = "old_englished_boots", fontsize = 35)
+        screen.draw.text("Value:" + str(selectedItem.price), (xOrient + 250, yOrient + 60), color = "black", fontname = "old_englished_boots", fontsize = 35)
+        screen.draw.textbox(selectedItem.description, (xOrient + 420, yOrient + 10, 480, 150), color = "black", fontname = "old_englished_boots")
 
 class GameManagerDraw:
     """Handles drawing game elements that are present in most/all game states such as UI display elements 
@@ -204,11 +232,18 @@ keysPressed = []
 
 gameManager.gameState = 0
 
-
+GivePlayerItem("Paladin's Platemail", player1, gameManager)
+GivePlayerItem("Paladin's Platemail", player1, gameManager)
+GivePlayerItem("Paladin's Platemail", player1, gameManager)
+GivePlayerItem("Paladin's Platemail", player1, gameManager)
+GivePlayerItem("Gilded Cutlass", player1, gameManager)
+GivePlayerItem("Paladin's Platemail", player1, gameManager)
+GivePlayerItem("Paladin's Platemail", player1, gameManager)
 GivePlayerItem("Paladin's Platemail", player1, gameManager)
 
 #TODO: Streamline background code. Should be the first thing drawn in all scenes
 def draw():
+    global mousePOS
     screen.clear()
     screen.blit(gameManager.backgrounds[gameManager.curBackground], (0, 0))
     screen.draw.text("Transparency", (400, 400), alpha = 0.5, color = (0, 255, 0))
@@ -247,9 +282,10 @@ def draw():
         inventoryManager.inventoryBackground.draw()
         inventoryManager.menuExitButton.draw()
         inventoryManager.selectedItemBackground.draw()
+        inventoryManager.inventoryItemSelect.draw()
         inventoryDraw.DrawInventoryItems()
-
-    cutlass.draw()
+        inventoryDraw.DrawInventoryHeaders()
+        inventoryDraw.DrawSelectedItemDescription()
     
             
         
@@ -261,6 +297,7 @@ turnStarted = False
 initUnitAttack = False
 playerAttacking = False
 def update():
+    print(inventoryManager.inventoryOffset)
     global turnStarted
     global initUnitAttack
     global playerAttacking
@@ -384,25 +421,57 @@ def update():
     
 
 
-def on_mouse_down(pos):
+def on_mouse_down(pos, button):
     print(pos)
 
-    if backPack.obb_collidepoint(pos[0], pos[1]):
-        inventoryManager.showInventory = True
-        backPack.image = "opened_backpack"
-        inventoryManager.SetInventoryOrder(player1.inventory)
-    else:
-        backPack.image = "closed_backpack"
+    if inventoryManager.showInventory == True:
+        if button == mouse.WHEEL_DOWN and inventoryManager.scrollDetectorRect.collidepoint(pos[0], pos[1]):
+            inventoryManager.MoveInventoryDown()
+        
+        if button == mouse.WHEEL_UP and inventoryManager.scrollDetectorRect.collidepoint(pos[0], pos[1]):
+            inventoryManager.MoveInventoryUp()
 
+
+    
+
+
+    if backPack.obb_collidepoint(pos[0], pos[1]) and inventoryManager.showInventory == False:
+        inventoryManager.showInventory = True
+        inventoryManager.SetInventoryOrder(player1.inventory)
+        
+
+    elif backPack.obb_collidepoint(pos[0], pos[1]) and inventoryManager.showInventory == True:
+        inventoryManager.CloseInventory()
+
+
+    
     if inventoryManager.menuExitButton.obb_collidepoint(pos[0], pos[1]) and inventoryManager.showInventory == True:
-        inventoryManager.showInventory = False
-        print("WEOJWEORJWER")
+        inventoryManager.CloseInventory()
+    
+    
+
+    
+
 
 def on_key_down(key):
     global initUnitAttack
 
     
-    if menuManager.showMenu == True:
+
+    if inventoryManager.showInventory == True:
+        if key == keys.S:
+            inventoryManager.MoveChoiceDown()
+        
+        if key == keys.W:
+            inventoryManager.MoveChoiceUp()
+            
+
+        
+        
+
+
+    #Only one menu can be operated at a time. The elif change denotes the priority of these menus
+    elif menuManager.showMenu == True:
         if key == keys.S:
             #The player is unable to move their selection button down if there are no more options
             #or if they're at the third option on a page
@@ -455,7 +524,7 @@ def on_key_down(key):
 
 
     elif gameManager.gameState == 2:
-        if combatManager.playerTurn == True:
+        if combatManager.playerTurn == True and inventoryManager.showInventory == False:
             if key == keys.ESCAPE:
                 
 
@@ -511,10 +580,17 @@ def on_key_down(key):
             pass
             
 def on_mouse_move(pos):
+    global mousePOS
+    mousePOS = pos
     if backPack.obb_collidepoint(pos[0], pos[1]):
         backPack.image = "opened_backpack"
     else:
         backPack.image = "closed_backpack"
+
+
+    if inventoryManager.showInventory == True:
+        inventoryManager.CheckMouseCollisionAndSetInventoryPosition(pos)
+        
 
 
 

@@ -82,6 +82,7 @@ class Player(Unit):
             quantity (_int_): the number of items being added to the player inventory. This is only relevant to consumables
         """        
         if itemObject in self.inventory:
+            print("DONT NHAPPEN")
             self.inventory[self.inventory.index(itemObject)].quantity += quantity
         else:
 
@@ -106,13 +107,14 @@ class Player(Unit):
             itemObject (_itemTemplate_): The object can be any child of the ItemTemplate Class. 
             The object in this parameter should be created with gameManager.CreateGameItemObj( {actual item name} )
             quantity (_int_): the quantity of the item being added
-        """        
+        """  
         self.AddItemToInventory(itemObject, quantity)
         self.AddItemToItemDict(itemObject)
-
         #If an item is equipment, it should only be activated once when it is first given to the player
         if itemObject.itemType == "Equipment":
             itemObject.ActivateItem(self)
+
+        
 
     def RemoveItemFromInventory(self, itemObject:ItemTemplate):
         """Removes a specified item object from the player's inventory

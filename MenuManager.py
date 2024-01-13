@@ -11,6 +11,7 @@ class MenuManager:
         self.selectAction.center = (150, 750)
         self.selectAction.scale = 0.5
         
+        
         self.menuOptions = []
         """This list contains the current menu choices
         this list contains references to the actual objects desired by the menu
