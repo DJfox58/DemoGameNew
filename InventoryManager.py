@@ -103,6 +103,15 @@ class InventoryManager:
         self.inventoryOffset = 0
         self.menuPosition = 0
         self.inventoryItemSelect.midleft = (self.inventoryBackground.left + 100, self.inventoryBackground.top + 130)
+
+    def OpenInventory(self, player):
+        """Performs the necessary steps to init the inventory for opening
+
+        Args:
+            player (_Player_): player object whose inventory is being viewed
+        """        
+        self.showInventory = True
+        self.SetInventoryOrder(player.inventory)
         
 
     def MoveInventoryDown(self):

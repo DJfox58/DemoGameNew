@@ -111,10 +111,10 @@ class InventoryManagerDraw:
         manager = self.attachedInventoryManager
         xOrient = manager.inventoryBackground.left
         yOrient = manager.inventoryBackground.top
-        screen.draw.text("Name", midleft = (xOrient + 110, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
-        screen.draw.text("Quantity", center = (xOrient+ 360, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
-        screen.draw.text("Weight", center = (xOrient+ 470, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
-        screen.draw.text("Value", center = (xOrient+ 580, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
+        screen.draw.text("Name", midleft = (xOrient + 110, yOrient + 90), color = "black", fontname = "augusta_regular", fontsize = 35)
+        screen.draw.text("Quantity", center = (xOrient+ 360, yOrient + 90), color = "black", fontname = "augusta_regular", fontsize = 35)
+        screen.draw.text("Weight", center = (xOrient+ 470, yOrient + 90), color = "black", fontname = "augusta_regular", fontsize = 35)
+        screen.draw.text("Value", center = (xOrient+ 580, yOrient + 90), color = "black", fontname = "augusta_regular", fontsize = 35)
 
 
     def DrawInventoryItems(self):
@@ -139,10 +139,10 @@ class InventoryManagerDraw:
             item = invDraw[i]
             screen.blit(item.spriteName, (xOrient + 80 - (images.gilded_cutlass.get_width()/2), yOrient + 130 - (images.gilded_cutlass.get_height()/2) + ((i - itemOffset) * 70)))
             #screen.blit("item_box_tsp", (xOrient + 80 - (images.gilded_cutlass.get_width()/2), yOrient + 130 - (images.gilded_cutlass.get_height()/2)))
-            screen.draw.text(str(item.itemName), midleft = (xOrient + 110, yOrient + 136 + ((i - itemOffset) * 70)), color = fontColor, fontname = "old_englished_boots", fontsize = 35)
-            screen.draw.text(str(item.quantity), center = (xOrient+ 360, yOrient + 136 + ((i - itemOffset) * 70)), color = fontColor, fontname = "old_englished_boots", fontsize = 35)
-            screen.draw.text(str(item.weight), center = (xOrient + 470, yOrient + 136 + ((i - itemOffset) * 70)), color = fontColor, fontname = "old_englished_boots", fontsize = 35)
-            screen.draw.text(str(item.price), center = (xOrient + 580, yOrient + 136 + ((i - itemOffset) * 70)), color = fontColor, fontname = "old_englished_boots", fontsize = 35)
+            screen.draw.text(str(item.itemName), midleft = (xOrient + 110, yOrient + 136 + ((i - itemOffset) * 70)), color = fontColor, fontname = "augusta_regular", fontsize = 35)
+            screen.draw.text(str(item.quantity), center = (xOrient+ 360, yOrient + 136 + ((i - itemOffset) * 70)), color = fontColor, fontname = "augusta_regular", fontsize = 35)
+            screen.draw.text(str(item.weight), center = (xOrient + 470, yOrient + 136 + ((i - itemOffset) * 70)), color = fontColor, fontname = "augusta_regular", fontsize = 35)
+            screen.draw.text(str(item.price), center = (xOrient + 580, yOrient + 136 + ((i - itemOffset) * 70)), color = fontColor, fontname = "augusta_regular", fontsize = 35)
             pass
 
 
@@ -155,10 +155,10 @@ class InventoryManagerDraw:
         itemSprite.topleft = (xOrient + 20, yOrient + 10)
         itemSprite.draw()
 
-        screen.draw.text(selectedItem.itemName, (xOrient + 110, yOrient + 10), color = "black", fontname = "old_englished_boots", fontsize = 35)
-        screen.draw.text("Weight:" + str(selectedItem.weight), (xOrient + 110, yOrient + 60), color = "black", fontname = "old_englished_boots", fontsize = 35)
-        screen.draw.text("Value:" + str(selectedItem.price), (xOrient + 250, yOrient + 60), color = "black", fontname = "old_englished_boots", fontsize = 35)
-        screen.draw.textbox(selectedItem.description, (xOrient + 420, yOrient + 10, 480, 150), color = "black", fontname = "old_englished_boots")
+        screen.draw.text(selectedItem.itemName, (xOrient + 110, yOrient + 10), color = "black", fontname = "augusta_regular", fontsize = 35)
+        screen.draw.text("Weight:" + str(selectedItem.weight), (xOrient + 110, yOrient + 60), color = "black", fontname = "augusta_regular", fontsize = 35)
+        screen.draw.text("Value:" + str(selectedItem.price), (xOrient + 250, yOrient + 60), color = "black", fontname = "augusta_regular", fontsize = 35)
+        screen.draw.textbox(selectedItem.description, (xOrient + 420, yOrient + 10, 480, 150), color = "black", fontname = "augusta_regular")
 
 class GameManagerDraw:
     """Handles drawing game elements that are present in most/all game states such as UI display elements 
@@ -436,8 +436,7 @@ def on_mouse_down(pos, button):
 
 
     if backPack.obb_collidepoint(pos[0], pos[1]) and inventoryManager.showInventory == False:
-        inventoryManager.showInventory = True
-        inventoryManager.SetInventoryOrder(player1.inventory)
+        inventoryManager.OpenInventory(player1)
         
 
     elif backPack.obb_collidepoint(pos[0], pos[1]) and inventoryManager.showInventory == True:
@@ -457,16 +456,24 @@ def on_key_down(key):
     global initUnitAttack
 
     
+    if key == keys.M:
+        inventoryManager.OpenInventory(player1)
 
     if inventoryManager.showInventory == True:
         if key == keys.S:
             inventoryManager.MoveChoiceDown()
-        
+            return
         if key == keys.W:
             inventoryManager.MoveChoiceUp()
+            return
+        
+        if key == keys.ESCAPE:
+            inventoryManager.CloseInventory()
+            return
             
 
-        
+
+    
         
 
 
