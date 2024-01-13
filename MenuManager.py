@@ -23,7 +23,7 @@ class MenuManager:
         self.menuChoice = 0
         """Starts at 0 on the first menu choice
         """        
-
+        
         self.menuPage = 0
         """The current page the menu selection is on.
         Each page contains 3 options"""

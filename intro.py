@@ -9,6 +9,7 @@ from CombatManager import CombatManager
 from GameManager import GameManager
 from Attack import Attack
 from Constants import SpriteConstants
+from InventoryManager import InventoryManager
 import pgzero.screen
 screen : pgzero.screen.Screen
 WIDTH  = 1280
@@ -95,6 +96,41 @@ class MenuManagerDraw:
                 screen.blit("menu_button", (70, 720 + ((i-self.attachedMenuManager.menuPage*3)*100)))
                 screen.draw.textbox(str(choiceList[i]), (70, 720 + ((i-self.attachedMenuManager.menuPage*3)*100), 160, 60))
 
+class InventoryManagerDraw:
+    def __init__(self, inventoryManager = ""):
+        self.attachedInventoryManager = inventoryManager
+
+    def AttachInventoryManager(self, inventoryManager):
+        self.attachedInventoryManager = inventoryManager
+
+    def DrawInventoryItems(self):
+        #x + 80
+        #y + 130
+
+        manager = self.attachedInventoryManager
+        xOrient = manager.inventoryBackground.left
+        yOrient = manager.inventoryBackground.top
+        invDraw = self.attachedInventoryManager.curInventoryOrder
+
+
+        screen.draw.text("Name", midleft = (xOrient + 110, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
+        screen.draw.text("Quantity", center = (xOrient+ 360, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
+        screen.draw.text("Weight", center = (xOrient+ 470, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
+        screen.draw.text("Value", center = (xOrient+ 580, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
+        
+
+
+
+        for i in range(len(invDraw)):
+            item = invDraw[i]
+            screen.blit(item.spriteName, (xOrient + 80 - (images.gilded_cutlass.get_width()/2), yOrient + 130 - (images.gilded_cutlass.get_height()/2) + (i*70)))
+            #screen.blit("item_box_tsp", (xOrient + 80 - (images.gilded_cutlass.get_width()/2), yOrient + 130 - (images.gilded_cutlass.get_height()/2)))
+            screen.draw.text(str(item.itemName), midleft = (xOrient + 110, yOrient + 136 + (i*70)), color = "black", fontname = "old_englished_boots", fontsize = 35)
+            screen.draw.text(str(item.quantity), center = (xOrient+ 360, yOrient + 136 + (i*70)), color = "black", fontname = "old_englished_boots", fontsize = 35)
+            screen.draw.text(str(item.weight), center = (xOrient + 470, yOrient + 136 + (i*70)), color = "black", fontname = "old_englished_boots", fontsize = 35)
+            screen.draw.text(str(item.price), center = (xOrient + 580, yOrient + 136 + (i*70)), color = "black", fontname = "old_englished_boots", fontsize = 35)
+            pass
+
 
 class GameManagerDraw:
     """Handles drawing game elements that are present in most/all game states such as UI display elements 
@@ -111,11 +147,12 @@ class GameManagerDraw:
         coinActor.draw()
         screen.draw.text(str(player.displayGold), (0, 0), midleft = (coinActor.right, coinActor.center[1]), fontsize = 25, color = (255, 255, 255))
     
-    
 
+
+
+#This method is used by MenuOption objects for the player's menu selects
 def GivePlayerItem(itemName:str, player:Player, gameManager:GameManager):
     player.AddItemToInventoryAndInitialize(gameManager.CreateGameItemObj(itemName), 1)
-
 
 
 
@@ -125,8 +162,10 @@ gameManager = GameManager()
 combatManager = CombatManager()
 combatDraw = CombatManagerDraw()
 menuManager = MenuManager()
+inventoryManager = InventoryManager()
 menuDraw = MenuManagerDraw(menuManager)
 gameDraw = GameManagerDraw(gameManager)
+inventoryDraw = InventoryManagerDraw(inventoryManager)
 menuManager.AttachMenuDraw(menuDraw)
 
 playerActor = Actor("player_idle_1", scale = 0.4, midbottom = (150, 500), anchor = ("middle", "bottom"))
@@ -166,10 +205,10 @@ keysPressed = []
 gameManager.gameState = 0
 
 
+GivePlayerItem("Paladin's Platemail", player1, gameManager)
 
 #TODO: Streamline background code. Should be the first thing drawn in all scenes
 def draw():
-    print(gameManager.gameState)
     screen.clear()
     screen.blit(gameManager.backgrounds[gameManager.curBackground], (0, 0))
     screen.draw.text("Transparency", (400, 400), alpha = 0.5, color = (0, 255, 0))
@@ -184,19 +223,16 @@ def draw():
     if gameManager.gameState == 0:
         if gameManager.showTitleScreen:
             screen.blit("press_space_black", (640 - (images.press_space_black.get_width()/2), 800 - (images.press_space_black.get_height()/2)))
-        else:
-            menuDraw.DrawMenuOptions(menuManager.menuOptions)
+
 
     #These elements should be drawn in every game state except the title screen
     else:
         backPack.draw()
         gameDraw.DrawGoldUI(player1)
-
+     
 
 
     if gameManager.gameState == 2:
-        if combatManager.playerTurn:
-            menuDraw.DrawMenuOptions(menuManager.menuOptions)
         combatDraw.DrawUnits(combatManager)
 
     if gameManager.gameState == 3:
@@ -204,6 +240,14 @@ def draw():
         combatDraw.DrawUnits(combatManager)
         if combatManager.initVictoryScreen == True:
             pass
+    if menuManager.showMenu:
+        menuDraw.DrawMenuOptions(menuManager.menuOptions)
+
+    if inventoryManager.showInventory:
+        inventoryManager.inventoryBackground.draw()
+        inventoryManager.menuExitButton.draw()
+        inventoryManager.selectedItemBackground.draw()
+        inventoryDraw.DrawInventoryItems()
 
     cutlass.draw()
     
@@ -268,6 +312,7 @@ def update():
                 combatManager.enemyTurn = False
                 initUnitAttack = False
                 combatManager.curEnemyTurnInd = 0
+                menuManager.showMenu = True
 
         #This condition is always true during the enemy turn
         if combatManager.enemyTurn == True:
@@ -342,10 +387,52 @@ def update():
 def on_mouse_down(pos):
     print(pos)
 
+    if backPack.obb_collidepoint(pos[0], pos[1]):
+        inventoryManager.showInventory = True
+        backPack.image = "opened_backpack"
+        inventoryManager.SetInventoryOrder(player1.inventory)
+    else:
+        backPack.image = "closed_backpack"
+
+    if inventoryManager.menuExitButton.obb_collidepoint(pos[0], pos[1]) and inventoryManager.showInventory == True:
+        inventoryManager.showInventory = False
+        print("WEOJWEORJWER")
+
 def on_key_down(key):
     global initUnitAttack
 
-    #Combat Code
+    
+    if menuManager.showMenu == True:
+        if key == keys.S:
+            #The player is unable to move their selection button down if there are no more options
+            #or if they're at the third option on a page
+            menuManager.MoveChoiceDown()
+
+        if key == keys.W:
+            menuManager.MoveChoiceUp()
+
+        if key == keys.A:
+            if menuManager.menuPage > 0:
+
+                #Goes 1 page down and resets the menu choice to the top of the next page
+                menuManager.menuPage -= 1
+                menuManager.menuChoice = menuManager.menuPage*3
+                #Resets select hover to the top of the menu
+                menuManager.selectAction.center = (150, 750)
+        
+        if key == keys.D:
+            #This makes sure the player cannot go to a page that doesn't exist
+            if menuManager.menuPage < (len(menuManager.menuOptions)-1) // 3:
+
+                #goes 1 page up and resets the menu choice to the top of the next page
+                menuManager.menuPage += 1
+                menuManager.menuChoice = menuManager.menuPage*3
+
+                #Reset select hover to the top of the menu
+                menuManager.selectAction.center = (150, 750)
+
+
+
 
 
     if gameManager.gameState == 0:
@@ -353,41 +440,15 @@ def on_key_down(key):
             if gameManager.showTitleScreen == True:
                 menuManager.menuOptions = [receiveGildedCutlass, receivePaladinsPlatemail, receive50Gold]
                 gameManager.showTitleScreen = False
+                menuManager.showMenu = True
                 print("PETER")
 
         if gameManager.showTitleScreen == False:
-            if key == keys.S:
-                #The player is unable to move their selection button down if there are no more options
-                #or if they're at the third option on a page
-                menuManager.MoveChoiceDown()
-
-            if key == keys.W:
-                menuManager.MoveChoiceUp()
-
-            if key == keys.A:
-                if menuManager.menuPage > 0:
-
-                    #Goes 1 page down and resets the menu choice to the top of the next page
-                    menuManager.menuPage -= 1
-                    menuManager.menuChoice = menuManager.menuPage*3
-                    #Resets select hover to the top of the menu
-                    menuManager.selectAction.center = (150, 750)
-            
-            if key == keys.D:
-                #This makes sure the player cannot go to a page that doesn't exist
-                if menuManager.menuPage < (len(menuManager.menuOptions)-1) // 3:
-
-                    #goes 1 page up and resets the menu choice to the top of the next page
-                    menuManager.menuPage += 1
-                    menuManager.menuChoice = menuManager.menuPage*3
-
-                    #Reset select hover to the top of the menu
-                    menuManager.selectAction.center = (150, 750)
-
             if key == keys.RETURN:
                 menuManager.menuOptions[menuManager.menuChoice].RunFunction()
                 gameManager.gameState = 2
                 menuManager.menuChoice = 0
+                menuManager.showMenu = True
                 gameManager.SetBackground(1)
                 combatManager.InitializeCombat(3, player1, menuManager)
 
@@ -395,35 +456,6 @@ def on_key_down(key):
 
     elif gameManager.gameState == 2:
         if combatManager.playerTurn == True:
-            if key == keys.S:
-                #The player is unable to move their selection button down if there are no more options
-                #or if they're at the third option on a page
-                menuManager.MoveChoiceDown()
-
-            if key == keys.W:
-                menuManager.MoveChoiceUp()
-
-            if key == keys.A:
-                if menuManager.menuPage > 0:
-
-                    #Goes 1 page down and resets the menu choice to the top of the next page
-                    menuManager.menuPage -= 1
-                    menuManager.menuChoice = menuManager.menuPage*3
-                    #Resets select hover to the top of the menu
-                    menuManager.selectAction.center = (150, 750)
-            
-            if key == keys.D:
-                #This makes sure the player cannot go to a page that doesn't exist
-                if menuManager.menuPage < (len(menuManager.menuOptions)-1) // 3:
-
-                    #goes 1 page up and resets the menu choice to the top of the next page
-                    menuManager.menuPage += 1
-                    menuManager.menuChoice = menuManager.menuPage*3
-
-                    #Reset select hover to the top of the menu
-                    menuManager.selectAction.center = (150, 750)
-
-
             if key == keys.ESCAPE:
                 
 
@@ -441,7 +473,6 @@ def on_key_down(key):
                     
 
             if key == keys.RETURN:
-                #print("OH FUCK FIGHT CODE POPPED")
 
                 #Player chooses which action they would like to take
                 if combatManager.turnPhase == 0:
@@ -466,6 +497,7 @@ def on_key_down(key):
                 if combatManager.turnPhase == 3:
                     combatManager.turnPhase = 0
                     menuManager.menuChoice = 0
+                    menuManager.showMenu = False
 
                     if combatManager.playerSelectedAction == "Fight":
                         initUnitAttack = True

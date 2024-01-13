@@ -7,7 +7,7 @@ from pgzhelper import *
 import pgzrun
 class GameManager:
     def __init__(self):
-        self.gameItemDict = {"Gilded Cutlass" : DamageIncreaseItem(20, "This cutlass is rumoured to have been wielded by Blackbeard himself", "Gilded Cutlass", 5), "Paladin's Platemail" : HealthIncreaseItem(20, "A gleaming silver mail, adorned with the symbols of the church", "Paladin's Platemail", 15)}
+        self.gameItemDict = {"Gilded Cutlass" : DamageIncreaseItem(20, "This cutlass is rumoured to have been wielded by Blackbeard himself", "Gilded Cutlass", 5, 15, "gilded_cutlass"), "Paladin's Platemail" : HealthIncreaseItem(20, "A gleaming silver mail, adorned with the symbols of the church", "Paladin's Platemail", 15, 20, "paladins_platemail")}
         """Contains a copy of all items in the game. Items can be cloned from this list to become
         active items. This variable is FINAL and should never be modified.
         """     
