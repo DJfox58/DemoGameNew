@@ -15,6 +15,7 @@ class CombatManager:
         self.turnPhase = 0
         """Turn phase reflect what current action the player is selecting
         Turn phase 0: Action Select: Fight, Item
+
         
         FIGHT
         Turn phase 1: Select Target
