@@ -79,11 +79,26 @@ class CombatManager:
         self.activeEnemyList = []
         """A list of all active enemies""" 
 
+
+        #Depreciated
         self.turnOrder = []
         """When combat is started. This list is populated with the turn order for all units in combat.
 
         """        
 
+        self.playerCombatActions = {"Fight" : 1, "Item" : 1}
+        """Tells the program which actions the player is able to use. Examples of when an option may not be available include: 
+        Player is out of consumable items
+        """        
+
+
+    def CheckPlayerAvailableActions(self, player):
+        self.playerCombatActions["Fight"] = 1
+
+        if len(player.GetConsumableItems()) > 0:
+            self.playerCombatActions["Item"] = 1
+        else:
+            self.playerCombatActions["Item"] = 0
 
     def CompleteVictoryAnimation(self):
         """Called once the initial victory screen animation is complete to signal the rest of the victory code to happen (gold + choose next action)
@@ -271,8 +286,15 @@ class CombatManager:
 
         Args:
             menuManager (_MenuManager_): The menu manager object being used by the game
-        """        
-        menuManager.menuOptions = ["Fight", "Item"]
+        """
+        actionList = []
+
+        for key in self.playerCombatActions:
+            if self.playerCombatActions[key] == 1:
+                actionList.append(key)
+
+
+        menuManager.menuOptions = actionList
 
 
     #Go through each unit in the turn order and prompt them to use a template UseAttack() methods

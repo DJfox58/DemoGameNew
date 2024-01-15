@@ -52,6 +52,33 @@ class InventoryManager:
             self.mouseDetectorRects.append(detector)
 
 
+    def SortInventoryAlphabetically(self):
+        sortingList = []
+        invList = self.curInventoryOrder
+        loops = len(invList)
+
+        
+        #Loops as many times as there are items in the current invetory setup
+        for i in range(loops):
+            curHighest = invList[0].itemName
+            curHighestIndex = 0
+
+
+            #Checks for the first item alphabetically 
+            #and then formats into an ordered list and deletes it from the old list
+            for j in range(len(invList)):
+                if invList[j].itemName < curHighest:
+                    curHighest = invList[j].itemName
+                    curHighestIndex = j
+
+            sortingList.append(invList[curHighestIndex])
+            invList.pop(curHighestIndex)
+        self.curInventoryOrder = sortingList
+        
+
+
+
+
     def CheckMouseCollision(self, pos):
         """Takes in mouse pos to check if the mouse is hovering over any inventory items
 
@@ -132,12 +159,14 @@ class InventoryManager:
             self.menuChoice -= 1
 
     def SetInventoryOrder(self, inventoryList):
-        """Used to update the items being displayed in the player's inventory
+        """Used to update the items being displayed in the player's inventory.
+        Creates a shallow copy of the player's inventory. The objects are references, but manipulating the list itself will not affect the player's inventory attribute
 
         Args:
             inventoryList (_List_): an ordered list of the player's item objects
         """
-        self.curInventoryOrder = inventoryList
+        #This has to be copy to avoid manipulations of the inventory order affecting the player's inventory attribute
+        self.curInventoryOrder = inventoryList.copy()
 
     def MoveChoiceDown(self):
         """Moves the menu choice down by 1. This method is constrained by the page limit and the choice limit per page.

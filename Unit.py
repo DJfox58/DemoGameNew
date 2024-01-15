@@ -36,21 +36,17 @@ class Unit:
 
     def SetSprites(self, sprites):
         """Sets the sprites for the current animation of the unit.
-        Should only be set to the unit's sprites
+        Should only be set to the unit's sprites/
+        This also applies to specified sprite offset to keep the sprite in the same position as its idle when changing sprites
 
         Args:
             sprites (_list[str]_): a list containing the name of the images used for the given animation
         """        
         self.actor.images = sprites
 
-
-
         if sprites == self.attackSprites:
-            print("ATTACK")
-            print(self.attackOffset, "ACC VALUE")
             self.curOffset = self.attackOffset
         elif sprites == self.hurtSprites:
-            print("HURT")
             self.curOffset = self.hurtOffset
         self.ActivateSpriteOffset()
     

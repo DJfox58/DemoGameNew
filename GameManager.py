@@ -10,8 +10,9 @@ class GameManager:
         self.gameItemDict = {"Gilded Cutlass" : DamageIncreaseItem(20, "This cutlass is rumoured to have been wielded by Blackbeard himself. Provides 5 strength to its wielder", "Gilded Cutlass", 5, 15, "gilded_cutlass"), "Paladin's Platemail" : HealthIncreaseItem(20, "A gleaming silver mail, adorned with the symbols of the church, Provides 15 health to its wielder", "Paladin's Platemail", 15, 20, "paladins_platemail")}
         """Contains a copy of all items in the game. Items can be cloned from this list to become
         active items. This variable is FINAL and should never be modified.
-        """     
-
+        """
+        self.gameItemDict["Small Health Potion"] = HealingItem(5, "The adventuring staple. Tastes oddly like fruit punch. Rejuvenates 25 Hp upon use", "Health Potion", 25, 1, 5, "small_health_potion")
+        self.gameItemDict["Voodoo Pin"] = BuffItem(10, "You don't know whose blood is on the pin's tip. You don't want to know. Pay 10 health to apply strength for 4 turns", "Voodoo Pin", 1, 5, "voodoo_pin", "wounded", 4, 10)
         
 
         self.encounterNumber = 0

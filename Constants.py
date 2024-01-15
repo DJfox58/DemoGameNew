@@ -12,6 +12,6 @@ class SpriteConstants:
         self.itemSpriteS = [45, 45]
 
         #These sprite actors are specifically used when a shop or inventory menu shows the extended description of an item
-        self.selectedItemActors = {"gilded_cutlass":Actor("gilded_cutlass", (0, 0)), "paladins_platemail":Actor("paladins_platemail", (0, 0))}
+        self.selectedItemActors = {"gilded_cutlass":Actor("gilded_cutlass", (0, 0)), "paladins_platemail":Actor("paladins_platemail", (0, 0)), "small_health_potion":Actor("small_health_potion", (0, 0)), "voodoo_pin":Actor("voodoo_pin", (0, 0))}
         for key in self.selectedItemActors:
             self.selectedItemActors[key].scale = 2

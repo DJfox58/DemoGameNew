@@ -110,3 +110,15 @@ class HealingItem(ConsumableItem):
 
     def UseItem(self, player):
         player.SetHealth(player.GetHealth() + self.healValue)
+        self.quantity -= 1
+
+class BuffItem(ConsumableItem):
+    def __init__(self, price, description, itemName, quantity, weight, sprite, buff, duration, hpCost = 0):
+        super().__init__(price, description, itemName, quantity, weight, sprite)
+        self.buff = buff
+        self.duration = duration
+        self.hpCost = hpCost
+
+    def UseItem(self, player):
+        player.AddStatus(self.buff, self.duration)
+        player.DoDamage(self.hpCost)

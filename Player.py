@@ -75,18 +75,20 @@ class Player(Unit):
     def AddItemToInventory(self, itemObject, quantity):
         """Adds an itemObject reference to the player's inventory. This should only
         be used for items that already exist in the player's inventory. New items
-        should be added with AddItemToInventoryAndInitialize
+        should be added with AddItemToInventoryAndInitialize.
+
+        new items have their quantity set to param. Old items have it added 
 
         Args:
             itemObject (_ItemTemplate_): The object can be any child of the ItemTemplate class
             quantity (_int_): the number of items being added to the player inventory. This is only relevant to consumables
         """        
         if itemObject in self.inventory:
-            print("DONT NHAPPEN")
             self.inventory[self.inventory.index(itemObject)].quantity += quantity
         else:
 
             #When the object is added, it's quantity should already be initialized
+            itemObject.quantity = quantity
             self.inventory.append(itemObject)
     
 
@@ -155,6 +157,31 @@ class Player(Unit):
         damage = chosenAttack.Attack(self, target)
         print(f"{self.name} uses {chosenAttack} against {target}")
         return damage
+    
+    def GetConsumableItems(self):
+        """Returns a list with references to all the player's consumable items
+        Used for menu purposes
+
+        Returns:
+            _List[items]_: List full of player consumables
+        """        
+        consumableList = []
+        for item in self.inventory:
+            if item.itemType == "Consumable":
+                consumableList.append(item)
+        return consumableList
+    
+    def InventoryCheck(self):
+        """Loops through the player's inventory and removes items with no more quantity left.
+        Used to check when consumables have been used up.
+        Do not ask about the recursion, just accept that it works 
+        """        
+        for i in range(len(self.inventory)):
+            if self.inventory[i].quantity <= 0:
+                self.inventory.pop(i)
+                self.InventoryCheck()
+                return
+
 
      
 
