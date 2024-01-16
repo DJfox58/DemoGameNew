@@ -116,7 +116,7 @@ class InventoryManagerDraw:
         screen.draw.text("Weight", center = (xOrient+ 470, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
         screen.draw.text("Value", center = (xOrient+ 580, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
 
-
+    
     def DrawInventoryItems(self):
         """Loops through the ordered item list in the inventoryManager and displays the items' sprites, names, and other values in the inventory
         """        
@@ -289,7 +289,11 @@ def draw():
         inventoryDraw.DrawInventoryItems()
         inventoryDraw.DrawInventoryHeaders()
         inventoryDraw.DrawSelectedItemDescription()
-        inventoryManager.SortInventoryAlphabetically()
+        screen.draw.rect(inventoryManager.nameBox, (0, 0, 0))
+        screen.draw.rect(inventoryManager.quantityBox, (0, 0, 0))
+        screen.draw.rect(inventoryManager.weightBox, (0, 0, 0))
+        screen.draw.rect(inventoryManager.valueBox, (0, 0, 0))
+        
         
         
 
@@ -442,6 +446,8 @@ def on_mouse_down(pos, button):
         
         if button == mouse.WHEEL_UP and inventoryManager.scrollDetectorRect.collidepoint(pos[0], pos[1]):
             inventoryManager.MoveInventoryUp()
+
+        inventoryManager.ChooseInventorySort(pos)
 
 
     

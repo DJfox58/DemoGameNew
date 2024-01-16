@@ -51,8 +51,16 @@ class InventoryManager:
             detector = Rect((self.inventoryBackground.left + 100, self.inventoryBackground.top + 105 + (i * 70)), (535, 50))
             self.mouseDetectorRects.append(detector)
 
+        xOrient = self.inventoryBackground.left
+        yOrient = self.inventoryBackground.top
+        self.nameBox = Rect((xOrient + 105, yOrient + 70), (70, 30))
+        self.quantityBox = Rect((xOrient + 310, yOrient + 70), (100, 30))
+        self.weightBox = Rect((xOrient + 430, yOrient + 70), (80, 30))
+        self.valueBox = Rect((xOrient + 545, yOrient + 70), (70, 30))
+        self.headerBoxes = [self.nameBox, self.quantityBox, self.weightBox, self.valueBox]
+        self.curSort = None
 
-    def SortInventoryAlphabetically(self):
+    def SortInventoryAlphabetically(self, reverse = False):
         sortingList = []
         invList = self.curInventoryOrder
         loops = len(invList)
@@ -73,7 +81,18 @@ class InventoryManager:
 
             sortingList.append(invList[curHighestIndex])
             invList.pop(curHighestIndex)
+        if reverse:
+            sortingList.reverse()
         self.curInventoryOrder = sortingList
+
+    def SortInventoryByQuantity(self, reverse = False):
+        sortingList = []
+
+    def SortInventoryByWeight(self, reverse = False):
+        pass
+
+    def SortInventoryByValue(self, reverse = False):
+        pass
         
 
 
@@ -98,6 +117,34 @@ class InventoryManager:
                     return i
                 
         return -1
+
+    def CheckMouseCollisionInvHeaders(self, pos):
+        self.headerDetected = -1
+        for i in range(4):
+            if self.headerBoxes[i].collidepoint(pos[0], pos[1]):
+                self.headerDetected = i
+                return i
+            
+        #This return will always be -1
+        return self.headerDetected
+    
+
+    def ChooseInventorySort(self, pos):
+        sortType = self.CheckMouseCollisionInvHeaders(pos)
+        
+        if sortType == 0:
+            self.SortInventoryAlphabetically((sortType == self.curSort))
+        elif sortType == 1:
+            self.SortInventoryByQuantity((sortType == self.curSort))
+        elif sortType == 2:
+            self.SortInventoryByWeight((sortType == self.curSort))
+        elif sortType == 3:
+            self.SortInventoryByValue((sortType == self.curSort))
+
+        elif sortType == -1:
+            return
+        
+
 
 
 
