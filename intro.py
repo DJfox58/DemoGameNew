@@ -15,6 +15,7 @@ screen : pgzero.screen.Screen
 WIDTH  = 1280
 HEIGHT = 1024
 
+
 mousePOS = []
 spriteC = SpriteConstants()
 class CombatManagerDraw:
