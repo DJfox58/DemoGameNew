@@ -126,9 +126,9 @@ class InventoryManagerDraw:
         manager = self.attachedInventoryManager
         xOrient = manager.inventoryBackground.left
         yOrient = manager.inventoryBackground.top
-        invDraw = self.attachedInventoryManager.curInventoryOrder
+        invDraw = self.attachedInventoryManager.curMenuOrder
         
-        itemOffset = self.attachedInventoryManager.inventoryOffset
+        itemOffset = self.attachedInventoryManager.menuOffset
 
         for i in range(itemOffset, min(len(invDraw), itemOffset+5)):
             fontColor = "black"
@@ -147,7 +147,7 @@ class InventoryManagerDraw:
 
 
     def DrawSelectedItemDescription(self):
-        selectedItem = self.attachedInventoryManager.curInventoryOrder[self.attachedInventoryManager.menuChoice]
+        selectedItem = self.attachedInventoryManager.curMenuOrder[self.attachedInventoryManager.menuChoice]
         xOrient, yOrient = self.attachedInventoryManager.selectedItemBackground.topleft
 
         #Draws the larger than normal item sprite
@@ -281,7 +281,9 @@ def draw():
     if menuManager.showMenu:
         menuDraw.DrawMenuOptions(menuManager.menuOptions)
 
-    if inventoryManager.showInventory:
+
+    #Draws all of the inventory assets to the screen when it is enabled
+    if inventoryManager.showMenu:
         inventoryManager.inventoryBackground.draw()
         inventoryManager.menuExitButton.draw()
         inventoryManager.selectedItemBackground.draw()
@@ -307,6 +309,7 @@ def update():
     global initUnitAction
     global playerAttacking
     gameManager.UpdateDisplayGold(player1)
+    print(inventoryManager.curSort)
 
 
     combatDraw.animateUnits(combatManager)
@@ -440,30 +443,30 @@ def update():
 def on_mouse_down(pos, button):
     print(pos)
 
-    if inventoryManager.showInventory == True:
+    if inventoryManager.showMenu == True:
         if button == mouse.WHEEL_DOWN and inventoryManager.scrollDetectorRect.collidepoint(pos[0], pos[1]):
-            inventoryManager.MoveInventoryDown()
+            inventoryManager.MoveMenuDown()
         
         if button == mouse.WHEEL_UP and inventoryManager.scrollDetectorRect.collidepoint(pos[0], pos[1]):
-            inventoryManager.MoveInventoryUp()
+            inventoryManager.MoveMenuUp()
 
-        inventoryManager.ChooseInventorySort(pos)
+        inventoryManager.ChooseMenuSort(pos)
 
 
     
 
 
-    if backPack.obb_collidepoint(pos[0], pos[1]) and inventoryManager.showInventory == False:
-        inventoryManager.OpenInventory(player1)
+    if backPack.obb_collidepoint(pos[0], pos[1]) and inventoryManager.showMenu == False:
+        inventoryManager.OpenMenu(player1)
         
 
-    elif backPack.obb_collidepoint(pos[0], pos[1]) and inventoryManager.showInventory == True:
-        inventoryManager.CloseInventory()
+    elif backPack.obb_collidepoint(pos[0], pos[1]) and inventoryManager.showMenu == True:
+        inventoryManager.CloseMenu()
 
 
     
-    if inventoryManager.menuExitButton.obb_collidepoint(pos[0], pos[1]) and inventoryManager.showInventory == True:
-        inventoryManager.CloseInventory()
+    if inventoryManager.menuExitButton.obb_collidepoint(pos[0], pos[1]) and inventoryManager.showMenu == True:
+        inventoryManager.CloseMenu()
     
     
 
@@ -475,9 +478,9 @@ def on_key_down(key):
 
     
     if key == keys.M:
-        inventoryManager.OpenInventory(player1)
+        inventoryManager.OpenMenu(player1)
 
-    if inventoryManager.showInventory == True:
+    if inventoryManager.showMenu == True:
         if key == keys.S:
             inventoryManager.MoveChoiceDown()
             return
@@ -486,7 +489,7 @@ def on_key_down(key):
             return
         
         if key == keys.ESCAPE:
-            inventoryManager.CloseInventory()
+            inventoryManager.CloseMenu()
             return
             
 
@@ -549,7 +552,7 @@ def on_key_down(key):
 
 
     elif gameManager.gameState == 2:
-        if combatManager.playerTurn == True and inventoryManager.showInventory == False:
+        if combatManager.playerTurn == True and inventoryManager.showMenu == False:
             if key == keys.ESCAPE:
                 
 
@@ -627,8 +630,8 @@ def on_mouse_move(pos):
         backPack.image = "closed_backpack"
 
 
-    if inventoryManager.showInventory == True:
-        inventoryManager.CheckMouseCollisionAndSetInventoryPosition(pos)
+    if inventoryManager.showMenu == True:
+        inventoryManager.CheckMouseCollisionAndSetMenuPosition(pos)
         
 
 
