@@ -7,8 +7,8 @@ class Player(Unit):
         
         #gold represents the player's actual amount of gold the player has
         #display gold is for UI elements to update the gold value incrementally rather than all at once
-        self.gold = 40
-        self.displayGold = 40
+        self.gold = 10
+        self.displayGold = 10
 
         self.inventory = []
         """
@@ -90,6 +90,7 @@ class Player(Unit):
             #When the object is added, it's quantity should already be initialized
             itemObject.quantity = quantity
             self.inventory.append(itemObject)
+            print("WFJWEOFFE")
     
 
     def AddItemToItemDict(self, itemObject):

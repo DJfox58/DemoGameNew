@@ -5,10 +5,14 @@ class ItemMenuManager:
     """This class is a parent class for the shop and inventory UI
     """    
     
-    def __init__(self):
+    def __init__(self, menuName):
         self.menuChoice = 0
         """Starts at 0 on the first menu choice
         """
+
+        self.menuName = menuName
+        """What appears at the top of the menu
+        """        
 
 
         self.menuPosition = 0
@@ -31,7 +35,10 @@ class ItemMenuManager:
         """   
 
         self.curMenuOrder = []
+        """Contains all the objects currently displayed in the menu
+        """        
 
+        self.attachedDraw = None
 
 
         self.inventoryBackground = Actor("inventory_background", topleft = (140, 100))    
@@ -58,45 +65,181 @@ class ItemMenuManager:
         self.weightBox = Rect((xOrient + 430, yOrient + 70), (80, 30))
         self.valueBox = Rect((xOrient + 545, yOrient + 70), (70, 30))
         self.headerBoxes = [self.nameBox, self.quantityBox, self.weightBox, self.valueBox]
-        self.curSort = None
+        
+        #-1000 is the no sort active number
+        self.curSort = -1000
 
-    def SortMenuAlphabetically(self, reverse = False):
+
+        self.drawList = []
+        """any actors placed in this list will be drawn while the list is active
+        """        
+
+    def SortMenuAlphabetically(self, menuList, reverse = False):
+        """Takes in a list and sorts it alphabetically. This is used as a primary sort for menus
+        and also acts as a tiebreaker when other sorts have items with the same sorting val
+
+        Args:
+            menuList (_List_): the list of menu items being sorted
+            reverse (bool, optional): _whether or not you want to reverse the list at the end_. Defaults to False.
+
+        Returns:
+            _type_: _description_
+        """        
+
         sortingList = []
-        invList = self.curMenuOrder
-        loops = len(invList)
+        loops = len(menuList)
 
         
         #Loops as many times as there are items in the current invetory setup
         for i in range(loops):
-            curHighest = invList[0].itemName
+            curHighest = menuList[0].itemName
             curHighestIndex = 0
-
 
             #Checks for the first item alphabetically 
             #and then formats into an ordered list and deletes it from the old list
-            for j in range(len(invList)):
-                if invList[j].itemName < curHighest:
-                    curHighest = invList[j].itemName
+            for j in range(len(menuList)):
+                if menuList[j].itemName < curHighest:
+                    curHighest = menuList[j].itemName
                     curHighestIndex = j
 
-            sortingList.append(invList[curHighestIndex])
-            invList.pop(curHighestIndex)
+            sortingList.append(menuList[curHighestIndex])
+            menuList.pop(curHighestIndex)
         if reverse:
             sortingList.reverse()
-        self.curMenuOrder = sortingList
+        return sortingList
 
-    def SortMenuByQuantity(self, reverse = False):
+    def SortMenuByQuantity(self, menuList, reverse = False):
+        """Takes in a list and sorts it by item quantity. This is used as a primary sort for menus
+
+        Args:
+            menuList (_List_): the list of menu items being sorted
+            reverse (bool, optional): _whether or not you want to reverse the list at the end_. Defaults to False.
+
+        Returns:
+            _type_: _description_
+        """        
+
         sortingList = []
+        loops = len(menuList)
 
-    def SortMenuByWeight(self, reverse = False):
-        pass
+        
+        #Loops as many times as there are items in the current invetory setup
+        for i in range(loops):
+            curHighest = menuList[0].quantity
+            curHighestIndex = 0
 
-    def SortMenuByValue(self, reverse = False):
-        pass
+            #Checks for the first item quantity descending 
+            #and then formats into an ordered list and deletes it from the old list
+            for j in range(len(menuList)):
+                if menuList[j].quantity >= curHighest:
+                    curHighest = menuList[j].quantity
+                    curHighestIndex = j
+                #If there is a tie in quantity, go by name
+                elif menuList[j].quantity == curHighest:
+                    if menuList[j].itemName < menuList[curHighestIndex].itemName:
+                        curHighest = menuList[j].quantity
+                        curHighestIndex = j
+
+            sortingList.append(menuList[curHighestIndex])
+            menuList.pop(curHighestIndex)
+        if reverse:
+            sortingList.reverse()
+        return sortingList
+    
+    def SortMenuByWeight(self, menuList, reverse = False):
+        """Takes in a list and sorts it by item weight. This is used as a primary sort for menus
+
+        Args:
+            menuList (_List_): the list of menu items being sorted
+            reverse (bool, optional): _whether or not you want to reverse the list at the end_. Defaults to False.
+
+        Returns:
+            _List_: Sorted list of objects by weight
+        """        
+
+        sortingList = []
+        loops = len(menuList)
+
+        
+        #Loops as many times as there are items in the current invetory setup
+        for i in range(loops):
+            curHighest = menuList[0].weight
+            curHighestIndex = 0
+
+            #Checks for the first item weight descending 
+            #and then formats into an ordered list and deletes it from the old list
+            for j in range(len(menuList)):
+                if menuList[j].weight >= curHighest:
+                    curHighest = menuList[j].weight
+                    curHighestIndex = j
+                #If there is a tie in weight, go by name
+                elif menuList[j].weight == curHighest:
+                    if menuList[j].itemName < menuList[curHighestIndex].itemName:
+                        curHighest = menuList[j].weight
+                        curHighestIndex = j
+
+            sortingList.append(menuList[curHighestIndex])
+            menuList.pop(curHighestIndex)
+        if reverse:
+            sortingList.reverse()
+        return sortingList
+
+    def SortMenuByValue(self, menuList, reverse = False):
+        """Takes in a list and sorts it by item value. This is used as a primary sort for menus
+
+        Args:
+            menuList (_List_): the list of menu items being sorted
+            reverse (bool, optional): _whether or not you want to reverse the list at the end_. Defaults to False.
+
+        Returns:
+            _List_: Sorted list of objects by value
+        """        
+
+        sortingList = []
+        loops = len(menuList)
+
+        
+        #Loops as many times as there are items in the current invetory setup
+        for i in range(loops):
+            curHighest = menuList[0].price
+            curHighestIndex = 0
+
+            #Checks for the first item value descending 
+            #and then formats into an ordered list and deletes it from the old list
+            for j in range(len(menuList)):
+                if menuList[j].price >= curHighest:
+                    curHighest = menuList[j].price
+                    curHighestIndex = j
+                #If there is a tie in value, go by name
+                elif menuList[j].price == curHighest:
+                    if menuList[j].itemName < menuList[curHighestIndex].itemName:
+                        curHighest = menuList[j].price
+                        curHighestIndex = j
+
+            sortingList.append(menuList[curHighestIndex])
+            menuList.pop(curHighestIndex)
+        if reverse:
+            sortingList.reverse()
+        return sortingList
         
 
+    def RunClassSpecificMethods(self, player = None):
+        """Child classes should implement this to run menu specific methods in update()
+        """
+        self.RunMethods(player)  
 
 
+    def RunClassSpecificMouseDownMethods(self, player, pos):
+        self.RunMouseDownMethods(player, pos)
+          
+
+    def AttachMenuDraw(self, menuDrawObject):
+        """Attaches the menu manager's draw object to it
+
+        Args:
+            menuDrawObject (_MenuDraw_): the draw object created in Intro
+        """        
+        self.attachedDraw = menuDrawObject
 
     def CheckMouseCollision(self, pos):
         """Takes in mouse pos to check if the mouse is hovering over any Menu items
@@ -133,7 +276,7 @@ class ItemMenuManager:
             Weight = 3
             Value = 4
         """        
-        self.headerDetected = None
+        self.headerDetected = -1000
         for i in range(4):
             if self.headerBoxes[i].collidepoint(pos[0], pos[1]):
                 self.headerDetected = i
@@ -146,13 +289,13 @@ class ItemMenuManager:
     def ChooseMenuSort(self, pos):
         sortType = self.CheckMouseCollisionInvHeaders(pos)
         if sortType == 1:
-            self.SortMenuAlphabetically((sortType == self.curSort))
+            self.curMenuOrder = self.SortMenuAlphabetically(self.curMenuOrder, (sortType == self.curSort))
         elif sortType == 2:
-            self.SortMenuByQuantity((sortType == self.curSort))
+            self.curMenuOrder = self.SortMenuByQuantity(self.curMenuOrder, (sortType == self.curSort))
         elif sortType == 3:
-            self.SortMenuByWeight((sortType == self.curSort))
+            self.curMenuOrder = self.SortMenuByWeight(self.curMenuOrder, (sortType == self.curSort))
         elif sortType == 4:
-            self.SortMenuByValue((sortType == self.curSort))
+            self.curMenuOrder = self.SortMenuByValue(self.curMenuOrder, (sortType == self.curSort))
         
         elif sortType == None:
             pass
@@ -188,7 +331,7 @@ class ItemMenuManager:
         self.SetToMenuPosition(self.CheckMouseCollision(mousePOS))
 
 
-    def CloseMenu(self):
+    def CloseMenu(self, gameManager):
         """Resets Menu attributes so it can reopened again
         """        
         self.showMenu = False
@@ -197,7 +340,12 @@ class ItemMenuManager:
         self.menuPosition = 0
         self.inventoryItemSelect.midleft = (self.inventoryBackground.left + 100, self.inventoryBackground.top + 130)
 
-    def OpenMenu(self, menuOptions):
+        #Removes the menu from the active menus list
+        for menu in gameManager.activeMenus:
+            if menu == self:
+                gameManager.activeMenus.pop(gameManager.activeMenus.index(menu))
+
+    def OpenMenu(self, menuOptions, gameManager):
         """Performs the necessary steps to init the Menu for opening
 
         Args:
@@ -205,6 +353,7 @@ class ItemMenuManager:
         """        
         self.showMenu = True
         self.SetMenuOrder(menuOptions)
+        gameManager.activeMenus.insert(0, self)
         
 
 

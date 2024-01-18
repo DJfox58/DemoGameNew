@@ -11,7 +11,7 @@ class GameManager:
         """Contains a copy of all items in the game. Items can be cloned from this list to become
         active items. This variable is FINAL and should never be modified.
         """
-        self.gameItemDict["Small Health Potion"] = HealingItem(5, "The adventuring staple. Tastes oddly like fruit punch. Rejuvenates 25 Hp upon use", "Health Potion", 25, 1, 5, "small_health_potion")
+        self.gameItemDict["Health Potion"] = HealingItem(5, "The adventuring staple. Tastes oddly like fruit punch. Rejuvenates 25 Hp upon use", "Health Potion", 25, 1, 5, "small_health_potion")
         self.gameItemDict["Voodoo Pin"] = BuffItem(10, "You don't know whose blood is on the pin's tip. You don't want to know. Pay 10 health to apply strength for 4 turns", "Voodoo Pin", 1, 5, "voodoo_pin", "wounded", 4, 10)
         
 
@@ -21,7 +21,7 @@ class GameManager:
 
 
         self.showTitleScreen = True
-        self.backgrounds = ["start_screen", "grass_stage"]
+        self.backgrounds = ["start_screen", "town_background", "grass_stage"]
         self.curBackground = 0
 
 
@@ -31,8 +31,10 @@ class GameManager:
         2 = combat
         3 = victory screen (after combat)
         """        
-        self.menuOptions = []
-        
+
+        self.activeMenus = []
+        """This variable stores all active menus. Whichever menu that's at index 0 is the one that can be acted in.
+        """               
     
     def UpdateDisplayGold(self, player):
         """This method is called every update to check if the player's display gold needs to be updated
@@ -48,7 +50,7 @@ class GameManager:
 
     #Make a copy of the requested item from the gameItemDict
     #Return copy 
-    def CreateGameItemObj(self, itemName):
+    def CreateGameItemObj(self, itemName, quantity = 1):
         """Makes a deep copy of the requested item from the gameItemDict
 
         Args:
@@ -58,6 +60,7 @@ class GameManager:
             _Item_: the requested item object. It can be any base item type
         """        
         itemCopy = copy.deepcopy(self.gameItemDict[itemName])
+        itemCopy.quantity = quantity
         return itemCopy
 
 

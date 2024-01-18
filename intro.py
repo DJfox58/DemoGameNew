@@ -11,12 +11,13 @@ from Attack import Attack
 from Constants import SpriteConstants
 from InventoryManager import InventoryManager
 import pgzero.screen
+from ShopMenuManager import ShopMenuManager
 screen : pgzero.screen.Screen
 WIDTH  = 1280
 HEIGHT = 1024
 
 mousePOS = []
-spriteC = SpriteConstants()
+
 class CombatManagerDraw:
     """This class contains various methods used to draw and display unit sprites and elements related to them
     """    
@@ -104,6 +105,17 @@ class InventoryManagerDraw:
         self.attachedInventoryManager = inventoryManager
 
 
+    def DrawInventoryAssets(self):
+        """Draws a few miscelaneous assets that don't fit into the other draw methods
+        """        
+        self.attachedInventoryManager.inventoryBackground.draw()
+        self.attachedInventoryManager.menuExitButton.draw()
+        self.attachedInventoryManager.selectedItemBackground.draw()
+        self.attachedInventoryManager.inventoryItemSelect.draw()
+        for actor in self.attachedInventoryManager.drawList:
+            actor.draw()
+            actor.scale = actor.scale
+
 
     def DrawInventoryHeaders(self):
         """Draws the static headers to denote what the inventory values mean
@@ -111,6 +123,8 @@ class InventoryManagerDraw:
         manager = self.attachedInventoryManager
         xOrient = manager.inventoryBackground.left
         yOrient = manager.inventoryBackground.top
+
+        screen.draw.text(self.attachedInventoryManager.menuName, center = (xOrient + (images.inventory_background.get_width()/2), yOrient + 40), color = "black", fontname = "old_englished_boots", fontsize = 45)
         screen.draw.text("Name", midleft = (xOrient + 110, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
         screen.draw.text("Quantity", center = (xOrient+ 360, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
         screen.draw.text("Weight", center = (xOrient+ 470, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
@@ -165,6 +179,15 @@ class InventoryManagerDraw:
         screen.draw.text("Weight:" + str(selectedItem.weight), (xOrient + 600, yOrient + 10), color = "black", fontname = "old_englished_boots", fontsize = 35)
         screen.draw.text("Value:" + str(selectedItem.price), (xOrient + 740, yOrient + 10), color = "black", fontname = "old_englished_boots", fontsize = 35)
         screen.draw.textbox(selectedItem.description, (xOrient + 110, yOrient + 80, 700, 100), color = "black", fontname = "knight", align = "left")
+
+    def DrawWholeMenu(self):
+        """Calls all the draw methods to make code cleaner
+        """        
+        self.DrawInventoryAssets()
+        self.DrawInventoryItems()
+        self.DrawInventoryHeaders()
+        self.DrawSelectedItemDescription()
+
 class GameManagerDraw:
     """Handles drawing game elements that are present in most/all game states such as UI display elements 
     (backpack, gold display, etc). The elements this class manipulates belong to its attached GameManager object
@@ -178,8 +201,8 @@ class GameManagerDraw:
     def DrawGoldUI(self, player):
         coinActor = self.attachedGameManager.goldCoin
         coinActor.draw()
-        screen.draw.text(str(player.displayGold), (0, 0), midleft = (coinActor.right, coinActor.center[1]), fontsize = 25, color = (255, 255, 255), fontname = "old_englished_boots")
-    
+        screen.draw.text(str(player.displayGold), (0, 0), midleft = (coinActor.right, coinActor.center[1]), fontsize = 25, color = (255, 255, 255), fontname = "old_englished_boots") 
+
 
 
 
@@ -191,6 +214,7 @@ def GivePlayerItem(itemName:str, player:Player, gameManager:GameManager, quantit
 
 
 #Sets up all game manager systems
+spriteC = SpriteConstants()
 gameManager = GameManager()
 combatManager = CombatManager()
 combatDraw = CombatManagerDraw()
@@ -200,6 +224,14 @@ menuDraw = MenuManagerDraw(menuManager)
 gameDraw = GameManagerDraw(gameManager)
 inventoryDraw = InventoryManagerDraw(inventoryManager)
 menuManager.AttachMenuDraw(menuDraw)
+
+shopMenuManager = ShopMenuManager()
+shopMenuManager.InitShopStockOnStart(gameManager)
+shopDraw = InventoryManagerDraw(shopMenuManager)
+shopMenuManager.AttachMenuDraw(shopDraw)
+inventoryManager.AttachMenuDraw(inventoryDraw)
+
+
 
 playerActor = Actor("player_idle_1", scale = 0.4, midbottom = (150, 500), anchor = ("middle", "bottom"))
 playerActor.scale = 0.4
@@ -242,7 +274,7 @@ GivePlayerItem("Paladin's Platemail", player1, gameManager, 1)
 GivePlayerItem("Paladin's Platemail", player1, gameManager, 1)
 GivePlayerItem("Paladin's Platemail", player1, gameManager, 1)
 GivePlayerItem("Gilded Cutlass", player1, gameManager, 1)
-GivePlayerItem("Small Health Potion", player1, gameManager, 5)
+GivePlayerItem("Health Potion", player1, gameManager, 5)
 GivePlayerItem("Voodoo Pin", player1, gameManager, 2)
 #TODO: Streamline background code. Should be the first thing drawn in all scenes
 def draw():
@@ -268,7 +300,8 @@ def draw():
         backPack.draw()
         gameDraw.DrawGoldUI(player1)
      
-
+    if gameManager.gameState == 1:
+        pass
 
     if gameManager.gameState == 2:
         combatDraw.DrawUnits(combatManager)
@@ -283,18 +316,9 @@ def draw():
 
 
     #Draws all of the inventory assets to the screen when it is enabled
-    if inventoryManager.showMenu:
-        inventoryManager.inventoryBackground.draw()
-        inventoryManager.menuExitButton.draw()
-        inventoryManager.selectedItemBackground.draw()
-        inventoryManager.inventoryItemSelect.draw()
-        inventoryDraw.DrawInventoryItems()
-        inventoryDraw.DrawInventoryHeaders()
-        inventoryDraw.DrawSelectedItemDescription()
-        screen.draw.rect(inventoryManager.nameBox, (0, 0, 0))
-        screen.draw.rect(inventoryManager.quantityBox, (0, 0, 0))
-        screen.draw.rect(inventoryManager.weightBox, (0, 0, 0))
-        screen.draw.rect(inventoryManager.valueBox, (0, 0, 0))
+    if len(gameManager.activeMenus) > 0:
+        gameManager.activeMenus[0].attachedDraw.DrawWholeMenu()
+
         
         
         
@@ -309,7 +333,6 @@ def update():
     global initUnitAction
     global playerAttacking
     gameManager.UpdateDisplayGold(player1)
-    print(inventoryManager.curSort)
 
 
     combatDraw.animateUnits(combatManager)
@@ -317,6 +340,10 @@ def update():
         gameManager.resetUnitToIdleSprite(unit)
 
     backPack.scale = backPack.scale
+
+
+    if len(gameManager.activeMenus) > 0:
+        gameManager.activeMenus[0].RunClassSpecificMethods(player1)
     
 
     
@@ -360,7 +387,10 @@ def update():
         if combatManager.curEnemyTurnInd >= len(combatManager.activeEnemyList):
                 combatManager.playerTurn = True
                 combatManager.enemyTurn = False
+                combatManager.LowerStatusDurations(player1)
+                combatManager.ApplyStatusEffects(player1)
                 initUnitAction = False
+
                 
                 #This is reset for next enemy turn
                 combatManager.curEnemyTurnInd = 0
@@ -443,30 +473,39 @@ def update():
 def on_mouse_down(pos, button):
     print(pos)
 
-    if inventoryManager.showMenu == True:
-        if button == mouse.WHEEL_DOWN and inventoryManager.scrollDetectorRect.collidepoint(pos[0], pos[1]):
-            inventoryManager.MoveMenuDown()
-        
-        if button == mouse.WHEEL_UP and inventoryManager.scrollDetectorRect.collidepoint(pos[0], pos[1]):
-            inventoryManager.MoveMenuUp()
+    if len(gameManager.activeMenus) > 0:
+        gameManager.activeMenus[0].ChooseMenuSort(pos)
 
-        inventoryManager.ChooseMenuSort(pos)
+
+        if button == mouse.WHEEL_DOWN and gameManager.activeMenus[0].scrollDetectorRect.collidepoint(pos[0], pos[1]):
+            gameManager.activeMenus[0].MoveMenuDown()
+        
+        if button == mouse.WHEEL_UP and gameManager.activeMenus[0].scrollDetectorRect.collidepoint(pos[0], pos[1]):
+            gameManager.activeMenus[0].MoveMenuUp()
+
+        
+
+        if button == mouse.LEFT:
+            if gameManager.activeMenus[0].menuExitButton.obb_collidepoint(pos[0], pos[1]):
+                gameManager.activeMenus[0].CloseMenu(gameManager)
+
+            gameManager.activeMenus[0].RunClassSpecificMouseDownMethods(player1, pos)
+
+    
 
 
     
 
 
     if backPack.obb_collidepoint(pos[0], pos[1]) and inventoryManager.showMenu == False:
-        inventoryManager.OpenMenu(player1)
+        inventoryManager.OpenMenu(player1, gameManager)
         
 
     elif backPack.obb_collidepoint(pos[0], pos[1]) and inventoryManager.showMenu == True:
-        inventoryManager.CloseMenu()
+        inventoryManager.CloseMenu(gameManager)
 
 
-    
-    if inventoryManager.menuExitButton.obb_collidepoint(pos[0], pos[1]) and inventoryManager.showMenu == True:
-        inventoryManager.CloseMenu()
+
     
     
 
@@ -475,21 +514,21 @@ def on_mouse_down(pos, button):
 
 def on_key_down(key):
     global initUnitAction
-
+    
     
     if key == keys.M:
-        inventoryManager.OpenMenu(player1)
+        inventoryManager.OpenMenu(player1, gameManager)
 
-    if inventoryManager.showMenu == True:
+    if len(gameManager.activeMenus) > 0:
         if key == keys.S:
-            inventoryManager.MoveChoiceDown()
+            gameManager.activeMenus[0].MoveChoiceDown()
             return
         if key == keys.W:
-            inventoryManager.MoveChoiceUp()
+            gameManager.activeMenus[0].MoveChoiceUp()
             return
         
         if key == keys.ESCAPE:
-            inventoryManager.CloseMenu()
+            gameManager.activeMenus[0].CloseMenu(gameManager)
             return
             
 
@@ -538,24 +577,28 @@ def on_key_down(key):
                 menuManager.menuOptions = [receiveGildedCutlass, receivePaladinsPlatemail, receive50Gold]
                 gameManager.showTitleScreen = False
                 menuManager.showMenu = True
-                print("PETER")
 
         if gameManager.showTitleScreen == False:
             if key == keys.RETURN:
                 menuManager.menuOptions[menuManager.menuChoice].RunFunction()
-                gameManager.gameState = 2
-                menuManager.menuChoice = 0
-                menuManager.showMenu = True
+                menuManager.CloseMenuAndResetPosition()
+                gameManager.gameState = 1
                 gameManager.SetBackground(1)
-                combatManager.InitializeCombat(3, player1, menuManager)
+                shopMenuManager.OpenMenu(gameManager)
+                
+
+    
+    elif gameManager.gameState == 1:
+        if key == keys.RETURN:
+            combatManager.InitializeCombat(3, player1, menuManager)
+            menuManager.menuChoice = 0
+            menuManager.showMenu = True
 
 
 
     elif gameManager.gameState == 2:
         if combatManager.playerTurn == True and inventoryManager.showMenu == False:
             if key == keys.ESCAPE:
-                
-
                 if combatManager.turnPhase == 1:
                     combatManager.initCombatMenuOptions(menuManager)
                     combatManager.turnPhase -= 1
@@ -630,8 +673,8 @@ def on_mouse_move(pos):
         backPack.image = "closed_backpack"
 
 
-    if inventoryManager.showMenu == True:
-        inventoryManager.CheckMouseCollisionAndSetMenuPosition(pos)
+    if len(gameManager.activeMenus) > 0:
+        gameManager.activeMenus[0].CheckMouseCollisionAndSetMenuPosition(pos)
         
 
 

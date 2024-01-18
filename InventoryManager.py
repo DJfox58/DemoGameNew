@@ -7,11 +7,11 @@ class InventoryManager(ItemMenuManager):
     """    
     
     def __init__(self):
-        super().__init__()
+        super().__init__("Inventory")
 
 
 
-    def OpenMenu(self, player):
+    def OpenMenu(self, player, gameManager):
         """Performs the necessary steps to init the Menu for opening
 
         Args:
@@ -19,4 +19,12 @@ class InventoryManager(ItemMenuManager):
         """        
         self.showMenu = True
         self.SetMenuOrder(player.inventory)
+        gameManager.activeMenus.insert(0, self)
+
+    def RunMethods(self, player):
+        pass
+
+    def RunMouseDownMethods(self, player, pos):
+        pass
+    
 

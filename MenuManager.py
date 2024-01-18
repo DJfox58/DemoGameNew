@@ -36,6 +36,22 @@ class MenuManager:
         """        
 
 
+    def ResetMenuPosition(self):
+        """Doesn't make the menu dissapear, but returns it to it's default position.
+        Used when going from a state with a menu to another state with a menu. The menu shouldn't dissapear, but it should 
+        go back to the default position
+        """        
+        self.menuChoice = 0
+        self.menuPage = 0
+
+    
+    def CloseMenuAndResetPosition(self):
+        """like resetmenuposition but actually closes the menu
+        """        
+        self.showMenu = False
+        self.menuChoice = 0
+        self.menuPage = 0
+
     def AttachMenuDraw(self, menuDraw):
         """This method is used to connect the menu manager to its associated menu draw class if it wasn't
         done on initalization
