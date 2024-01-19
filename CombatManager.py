@@ -13,16 +13,7 @@ class CombatManager:
 
 
 
-        self.turnPhase = 0
-        """Turn phase reflect what current action the player is selecting
-        Turn phase 0: Action Select: Fight, Item
-
-        
-        
-        FIGHT
-        Turn phase 1: Select Target
-        Turn phase 2: Select attack
-        """        
+       
 
         self.curEnemyTurnInd = 0
         """The index of the enemy currently attacking during the enemy's turn
@@ -56,7 +47,10 @@ class CombatManager:
         
         #Rewards for combat completion
         self.combatGoldReward = 0
+        self.victoryCoin = Actor("gold_coin", midleft = (300, 440))
+        self.victoryCoin.scale = 4
         self.combatSpecialReward = None
+
 
 
         

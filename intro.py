@@ -74,10 +74,15 @@ class CombatManagerDraw:
                     offset += images.weakened_status.get_width() + 15
 
 
-    def animateUnits(self, combatManager):
+    def AnimateUnits(self, combatManager):
         for unit in combatManager.activeUnitList:
             unit.actor.animate()
-            unit.actor.scale = unit.actor.scale
+            unit.actor.scale = unit.actor.scale\
+            
+    def DrawVictoryRewards(self, combatManager):
+        combatManager.victoryCoin.draw()
+        screen.draw.text("+" + str(combatManager.combatGoldReward), midleft = (350, 440), color = "black", fontname = "old_englished_boots", fontsize = 50)
+
 
 class MenuManagerDraw:
     def __init__(self, menuManager = ""):
@@ -303,6 +308,8 @@ def draw():
         combatDraw.DrawUnits(combatManager)
         if combatManager.initVictoryScreen == True:
             pass
+        if combatManager.victoryScreenAnimationComplete:
+            combatDraw.DrawVictoryRewards(combatManager)
     if menuManager.showMenu:
         menuDraw.DrawMenuOptions(menuManager.menuOptions)
 
@@ -323,7 +330,7 @@ def update():
     gameManager.UpdateDisplayGold(player1)
 
 
-    combatDraw.animateUnits(combatManager)
+    combatDraw.AnimateUnits(combatManager)
     for unit in combatManager.activeUnitList:
         gameManager.resetUnitToIdleSprite(unit)
 
@@ -427,6 +434,7 @@ def update():
 
         #This will run only once when the victory screen first appears
         if combatManager.initVictoryScreen:
+            combatManager.GenerateCombatRewards()
             sounds.chain_pulley.play()
             animate(combatManager.victoryScreen, pos = (0 + images.combat_complete.get_width()/2, 0 + images.combat_complete.get_height()/2), tween="decelerate", duration = 3,)
             combatManager.initVictoryScreen = False
@@ -434,7 +442,7 @@ def update():
 
         if combatManager.victoryScreen.pos == (0 + images.combat_complete.get_width()/2, 0 + images.combat_complete.get_height()/2) and combatManager.victoryScreenAnimationComplete == False:
             sounds.chain_pulley.stop()
-            player1.SetGold(player1.GetGold() + random.randint(5, 15))
+            player1.SetGold(player1.GetGold() + combatManager.combatGoldReward)
             combatManager.CompleteVictoryAnimation()
 
         
