@@ -18,6 +18,11 @@ class MenuManager:
         ex. when selecting an attack, this list contains references to the player's attack objects
         """        
 
+        self.newMenuOptions = []
+        """When a menu choice is selected, all changes go to this list first. Then once all functions have finished using the 
+        original list, it updates to this one
+        """        
+
 
         self.attachedMenuDraw = attachedMenuDraw
         
@@ -35,6 +40,17 @@ class MenuManager:
         """The menu will only be drawn when this variable is True
         """        
 
+        self.functionOnSelect = None
+        """This function is run upon any menu selection
+        Used in combat to keep target and choice selection code clean
+        """      
+        self.functionOnSelectParams = []  
+
+
+        self.lateSelectFunctionUpdate = []
+        """Holds the function and fnd parameters requested to be updated. Used in refresh setSelectFunctionAndParams after
+        all option select related methods have already run
+        """        
 
     def ResetMenuPosition(self):
         """Doesn't make the menu dissapear, but returns it to it's default position.
@@ -43,7 +59,7 @@ class MenuManager:
         """        
         self.menuChoice = 0
         self.menuPage = 0
-
+        self.selectAction.center = (150, 750)
     
     def CloseMenuAndResetPosition(self):
         """like resetmenuposition but actually closes the menu
@@ -51,7 +67,8 @@ class MenuManager:
         self.showMenu = False
         self.menuChoice = 0
         self.menuPage = 0
-
+        self.selectAction.center = (150, 750)
+        
     def AttachMenuDraw(self, menuDraw):
         """This method is used to connect the menu manager to its associated menu draw class if it wasn't
         done on initalization
@@ -71,11 +88,9 @@ class MenuManager:
         if self.menuPage > 0:
             self.menuChoice = (self.menuChoice - (self.menuPage * 3))
 
-        print(len(self.menuOptions), "NUM MENU OPTIONS")
-        print(self.menuChoice, "Update player menu choice select")
         if self.menuChoice > len(self.menuOptions) -1:    
             self.menuChoice = len(self.menuOptions) - 1
-            print("THIS RAN")
+
         self.menuPage = 0
         self.selectAction.center = (150, 750 + (100 * self.menuChoice))
         self.menuPage = 0
@@ -99,6 +114,52 @@ class MenuManager:
             self.selectAction.bottom -= 100
             self.menuChoice -= 1
 
+    def RunSelectFunction(self):
+        """This method runs every time a menu option is selected
+        """
+        if self.functionOnSelect != None:        
+            self.functionOnSelect(*self.functionOnSelectParams)
+
+    def SetSelectFunctionAndParams(self, function, params):
+        """Sets the menu select function. This function is run every time a menu option is chosen
+
+        Args:
+            function (): The desired run fnc
+            params (): The parameters of this function
+        """        
+        self.functionOnSelect = function
+        self.functionOnSelectParams = params
+
+    def SetSelectFunctionAndParamsLate(self, function, params):
+        """Performs the saem actions as SetSelectFunctionAndParams, but does it after all menu related methods have run to avoid
+        unintentionally setting a select function for the next menu and running it in the same press
+
+        Args:
+            function (): The desired run fnc
+            params (): The parameters of this function
+        """        
+        self.lateSelectFunctionUpdate = [function, params]
+
+    def RefreshSelectFunctionAndParams(self):
+        """Used after all menu related methods have run on the set options to avoid unintentionally running a selectfunction that wasn't
+        intended
+        """        
+        if len(self.lateSelectFunctionUpdate) > 0:
+            self.SetSelectFunctionAndParams(*self.lateSelectFunctionUpdate)
+            self.lateSelectFunctionUpdate.clear()
+
+    def RefreshMenuOptions(self):
+        """Used after all menu related methods have run on the set options to avoid unintentionally running methods using an updates set of options
+        """        
+        self.menuOptions = self.newMenuOptions.copy()
+        
+
+    def ResetSelectFunctionAndParams(self):
+        self.functionOnSelect = None
+        self.functionOnSelectParams.clear()
+
+    
+
     
 class MenuOption:
     """This class is specifically used to serve as a menu option for certain preset menus
@@ -121,6 +182,8 @@ class MenuOption:
     
     def RunFunction(self):
         self.runFnc(*self.paramList)
+
+
     
     def __repr__(self):
         return self.optionName

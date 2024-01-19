@@ -1,3 +1,4 @@
+from MenuManager import MenuManager, MenuOption
 from pgzhelper import *
 from Enemy import Enemy
 from Player import Player
@@ -31,7 +32,7 @@ class CombatManager:
         self.playerSelectedTarget = None
         self.playerSelectedAction = None
 
-
+    
 
         #During animations, both playerTurn and enemyTurn can be false, however these variables will never BOTH be TRUE
         self.playerTurn = True
@@ -45,9 +46,20 @@ class CombatManager:
 
 
         self.victoryScreen = Actor("combat_complete", bottomleft = (0, 0))
+        
         self.initVictoryScreen = True
+        """Begins the animation of the victory screen appearing
+        """        
         self.victoryScreenAnimationComplete = False
-         
+        """Runs methods after the inital animation has finished once
+        """        
+        
+        #Rewards for combat completion
+        self.combatGoldReward = 0
+        self.combatSpecialReward = None
+
+
+        
         self.enemyActorDict = {"fire_enemy_1": [["fire_enemy_1", "fire_enemy_2", "fire_enemy_3", "fire_enemy_4", "end"], ["test_atk1", "test_atk2", "test_atk3", "test_atk4", "test_atk5", "test_atk6", "test_atk7", "test_atk8", "end", [0, 0]], 0.4]}
         """Contains the sprite information for all enemies. Includes: default sprites, attack sprites, and sprite scale
         """        
@@ -79,17 +91,23 @@ class CombatManager:
         self.activeEnemyList = []
         """A list of all active enemies""" 
 
-
-        #Depreciated
-        self.turnOrder = []
-        """When combat is started. This list is populated with the turn order for all units in combat.
-
-        """        
+     
 
         self.playerCombatActions = {"Fight" : 1, "Item" : 1}
         """Tells the program which actions the player is able to use. Examples of when an option may not be available include: 
         Player is out of consumable items
         """        
+
+        
+
+        self.initUnitAction = False
+        """This denotes when a unit can start an attack animation. It is turned true to start an attack animation
+        """      
+
+        self.playerAttacking = False
+        """This attribute is true when the player is in action animation at the end of their turn.
+        It is used to help signal when the enemy turn begins
+        """          
 
 
     def CheckPlayerAvailableActions(self, player):
@@ -153,7 +171,6 @@ class CombatManager:
         Args:
             unitObj (_Unit_): the unit being removed
         """
-        print(self.activeUnitList)
         unitObjInd = self.activeUnitList.index(unitObj)
         self.activeUnitList.pop(unitObjInd)
 
@@ -166,33 +183,7 @@ class CombatManager:
             self.activeEnemyList.pop(enemyObjInd)
 
 
-    def CreateTurnOrder(self):
-        """Constructs combat turn order using all current active units. Units should all
-        be initialized and placed in the activeUnit list before this method is called
 
-        Returns:
-            _list_: A list containing references to all the active unit objects. They are
-            all ordered from highest to lowest speed
-        """    
-        unitList = self.activeUnitList
-        selectedIndices = []
-        turnOrder = []
-        highestSpeed = -1
-        highestSpeedIndex = None
-        for i in range(len(unitList)):
-            for j in range(len(unitList)):
-                #This makes sure that the unit has not already been placed in the turn order
-                if not j in selectedIndices:
-                    if unitList[j].speed > highestSpeed:
-                        highestSpeed = unitList[j].speed
-                        highestSpeedIndex = j
-
-            turnOrder.append(unitList[highestSpeedIndex])
-            selectedIndices.append(highestSpeedIndex)
-            highestSpeed = -1
-            highestSpeedIndex = None
-
-        return turnOrder
 
     def CreateEncounter(self, numEnemies):
         """Creates a random encounter with numEnemies enemies
@@ -275,31 +266,46 @@ class CombatManager:
         self.HandleAttack(unit, player, attackDmg)
 
 
-    def EndCombat(self, player):
-        self.activeEnemyList.clear()
-        self.activeUnitList.clear()
-        player.SetGold(player.GetGold() + random.randint(4, 10))
+    def EndCombat(self):
+        self.playerSelectedAttack = None
+        self.playerSelectedTarget = None
+        self.playerSelectedAction = None
+        self.playerTurn = True
+        self.enemyTurn = False
+        self.initUnitAction = False
+        self.playerAttacking = False
 
 
-    def initCombatMenuOptions(self, menuManager):
+    def initCombatMenuOptions(self, menuManager:MenuManager, player:Player, delayed:bool):
         """Provides the starting combat menu options (Fight Item Etc)
 
         Args:
-            menuManager (_MenuManager_): The menu manager object being used by the game
-        """
-        actionList = []
+            menuManager (MenuManager): menu manager
+            player (Player): player
+            delayed (bool): if true. This method puts the combat options in the delayed update list for options. If false it adds it normally
+        """             
+        actionList = [MenuOption("Fight", self.ChooseFightAction, (menuManager, player))]
+        actionList.append(MenuOption("Item", self.ChooseItemAction, (menuManager, player)))
 
+
+        availableActionList = []
+        i = 0
         for key in self.playerCombatActions:
             if self.playerCombatActions[key] == 1:
-                actionList.append(key)
+                availableActionList.append(actionList[i])
+            i += 1
 
 
-        menuManager.menuOptions = actionList
+        #No matter what. This should always add to the newMenuOptions to keep it updated, but when you need to delay due to a menu choice
+        #The default menuOptions will not be updates
+        if not delayed:
+            menuManager.menuOptions = availableActionList
+        menuManager.newMenuOptions = availableActionList
 
 
     #Go through each unit in the turn order and prompt them to use a template UseAttack() methods
     #Enemy and player classes will implement the method differently
-    def InitializeCombat(self, numEnemies, player, menuManager):
+    def InitializeCombat(self, numEnemies, player, menuManager, delayed):
         """Called whenever a combat event begins. Handles the process of creating a desired number of 
         random enemies. It also sets up the active enemy and unit lists
 
@@ -307,33 +313,130 @@ class CombatManager:
             numEnemies (_type_): _description_
             player (_type_): _description_
             menuManager (_type_): _description_
+            delayed (_bool_): Whether or not the combat menu options set up gets delayed. Should be delayed when this method runs 
+            due to the press of an menu choice
         """        
         self.activeUnitList.append(player)
         self.CreateEncounter(numEnemies)
-        self.turnOrder = self.CreateTurnOrder()
-        self.initCombatMenuOptions(menuManager)
+        self.initCombatMenuOptions(menuManager, player, delayed)
 
 
 
+    def EndPlayerTurn(self, menuManager:MenuManager):
+        """Resets variables used during the player's turn and enables variables used to animate player
+
+        Args:
+            menuManager (_MenuManager_): menuManager
+        """        
+        menuManager.CloseMenuAndResetPosition()
+        self.initUnitAction = True
+        self.playerAttacking = True
+        self.playerTurn = False
 
 
-
-
-
-
-    #New combat with Pygame
-    #Player: Start combat and apply statuses + reduce duration
-        #Wait for player to select action
-        #
+    def GenerateCombatRewards(self):
+        self.combatGoldReward = random.randint(5, 15)
+        if random.randint(1, 3) == 3:
+            pass
+            #give special reward or smth
     
+
+    #--------------
+    #All the methods featured below are used as MenuOption methods for combat action selects or the select run function for the menu manager
+    #--------------
+        
+
+    #PHASE 1 ACTIONS
+    #These actions are the start of turn actions that denote primary actions a player can take
+    def ChooseFightAction(self, menuManager:MenuManager, player:Player):
+        """This method is called when the player chooses to attack
+
+        Args:
+            menuManager (MenuManager): menu manager
+            player (_Player_): player obj
+        """        
+        menuManager.newMenuOptions = self.activeEnemyList
+        menuManager.SetSelectFunctionAndParamsLate(self.ChooseEnemy, [menuManager, player])
+
+    def ChooseItemAction(self, menuManager:MenuManager, player:Player):
+        """This method is called when the player chooses to use an item
+
+        Args:
+            menuManager (MenuManager): menu manager obj
+            player (Player): player obj
+        """        
+        menuManager.newMenuOptions = player.GetConsumableItems()
+        menuManager.SetSelectFunctionAndParamsLate(self.ChooseItem, [menuManager, player])
+
+
+
+    #PHASE 2 ACTIONS
+    #These actions consist of picking from a list of certain types of actions based on the phase 1 choice
     
-    #Goals, 
+
+    def ChooseEnemy(self, menuManager:MenuManager, player:Player):
+        """Called when the player chooses an enemy to target with an attack or item. When this method is the menu manager's choice fnc,
+        the options will be filled with the current active enemies
+
+        Args:
+            menuManager (MenuManager): menu manager
+            player (Player): player
+        """               
+        self.playerSelectedTarget = menuManager.menuOptions[menuManager.menuChoice]
+        menuManager.newMenuOptions = player.attackList
+        menuManager.SetSelectFunctionAndParamsLate(self.ChooseAttack, [menuManager, player])
+
+
+    def ChooseItem(self, menuManager:MenuManager, player:Player):
+        """Called when the player chooses an item. When this method is the menu manager's choice function,
+        the options will be filled with the player's consumable items
+
+        Args:
+            menuManager (MenuManager): menu manager
+            player (Player): player manager
+        """        
+        #Activates the selected consumable and ends the player's turn
+        menuManager.menuOptions[menuManager.menuChoice].ActivateItem(player)
+        player.InventoryCheck()
+        player.SetSprites(player.hurtSprites) 
+        self.EndPlayerTurn(menuManager)
+
+
+
+    #PHASE 3 ACTIONS
+    def ChooseAttack(self, menuManager:MenuManager, player:Player,):
+        """Called when a player chooses an attack. When this method is the menu managers choice function,
+        the options will be filled with the player's attack
+
+        Args:
+            menuManager (MenuManager): _description_
+            player (Player): _description_
+        """        
+        self.playerSelectedAttack = menuManager.menuOptions[menuManager.menuChoice]
+        menuManager.ResetSelectFunctionAndParams()
+        
+        #Runs the attack and sets sprites to run
+        self.HandleAttack(player, self.playerSelectedTarget, player.AttackTarget(self.playerSelectedTarget, self.playerSelectedAttack))
+        player.SetSprites(player.attackSprites)
+        self.playerSelectedTarget.SetSprites(player.hurtSprites)
+        self.EndPlayerTurn(menuManager)
+
+        
         
 
 
-#Goals of combat
-#Set turn order based on speed
-#Have turns cycle individually (i.e don't group enemy actions into 1 big psuedo-turn)
-#Set up framwork for enemies to have multiple attacks
-#
-#https://gamedev.stackexchange.com/questions/5626/how-to-design-the-attack-class-in-an-rpg-game
+
+"""
+ if key == keys.ESCAPE:
+                if combatManager.turnPhase == 1:
+                    combatManager.initCombatMenuOptions(menuManager)
+                    combatManager.turnPhase -= 1
+                    combatManager.playerSelectedAction = None
+                    menuManager.ResetMenuOnChoice()
+
+                if combatManager.turnPhase == 2:
+                    menuManager.menuOptions = combatManager.activeEnemyList
+                    combatManager.turnPhase -= 1
+                    combatManager.playerSelectedTarget = None
+                    menuManager.ResetMenuOnChoice()"""
+                

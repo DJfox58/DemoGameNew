@@ -1,3 +1,4 @@
+import random
 import pgzrun
 from MenuManager import *
 from pgzhelper import *
@@ -12,6 +13,7 @@ from Constants import SpriteConstants
 from InventoryManager import InventoryManager
 import pgzero.screen
 from ShopMenuManager import ShopMenuManager
+from TownManager import TownManager
 screen : pgzero.screen.Screen
 WIDTH  = 1280
 HEIGHT = 1024
@@ -154,7 +156,7 @@ class InventoryManagerDraw:
             item = invDraw[i]
             screen.blit(item.spriteName, (xOrient + 80 - (images.gilded_cutlass.get_width()/2), yOrient + 130 - (images.gilded_cutlass.get_height()/2) + ((i - itemOffset) * 70)))
             #screen.blit("item_box_tsp", (xOrient + 80 - (images.gilded_cutlass.get_width()/2), yOrient + 130 - (images.gilded_cutlass.get_height()/2)))
-            screen.draw.text(str(item.itemName), midleft = (xOrient + 110, yOrient + 136 + ((i - itemOffset) * 70)), color = fontColor, fontname = "old_englished_boots", fontsize = 35)
+            screen.draw.text(str(item.name), midleft = (xOrient + 110, yOrient + 136 + ((i - itemOffset) * 70)), color = fontColor, fontname = "old_englished_boots", fontsize = 35)
             screen.draw.text(str(item.quantity), center = (xOrient+ 360, yOrient + 136 + ((i - itemOffset) * 70)), color = fontColor, fontname = "old_englished_boots", fontsize = 35)
             screen.draw.text(str(item.weight), center = (xOrient + 470, yOrient + 136 + ((i - itemOffset) * 70)), color = fontColor, fontname = "old_englished_boots", fontsize = 35)
             screen.draw.text(str(item.price), center = (xOrient + 580, yOrient + 136 + ((i - itemOffset) * 70)), color = fontColor, fontname = "old_englished_boots", fontsize = 35)
@@ -162,24 +164,26 @@ class InventoryManagerDraw:
 
 
     def DrawSelectedItemDescription(self):
-        selectedItem = self.attachedInventoryManager.curMenuOrder[self.attachedInventoryManager.menuChoice]
-        xOrient, yOrient = self.attachedInventoryManager.selectedItemBackground.topleft
+        #If the menu is empty then no item can be selected
+        if self.attachedInventoryManager.menuEmpty == False:
+            selectedItem = self.attachedInventoryManager.curMenuOrder[self.attachedInventoryManager.menuChoice]
+            xOrient, yOrient = self.attachedInventoryManager.selectedItemBackground.topleft
 
-        #Draws the larger than normal item sprite
-        itemSprite = spriteC.selectedItemActors[selectedItem.spriteName]
-        itemSprite.topleft = (xOrient + 20, yOrient + 10)
-        itemSprite.draw()
+            #Draws the larger than normal item sprite
+            itemSprite = spriteC.selectedItemActors[selectedItem.spriteName]
+            itemSprite.topleft = (xOrient + 20, yOrient + 10)
+            itemSprite.draw()
 
-        #Consumable items should show the quantity whereas equipment items can only have a quantity of 1
-        if selectedItem.itemType == "Consumable":
-            screen.draw.text(selectedItem.itemName + " " + str(selectedItem.quantity) + "x", (xOrient + 110, yOrient + 10), color = "black", fontname = "old_englished_boots", fontsize = 35)
-        elif selectedItem.itemType == "Equipment":
-            screen.draw.text(selectedItem.itemName, (xOrient + 110, yOrient + 10), color = "black", fontname = "old_englished_boots", fontsize = 35)
+            #Consumable items should show the quantity whereas equipment items can only have a quantity of 1
+            if selectedItem.itemType == "Consumable":
+                screen.draw.text(selectedItem.name + " " + str(selectedItem.quantity) + "x", (xOrient + 110, yOrient + 10), color = "black", fontname = "old_englished_boots", fontsize = 35)
+            elif selectedItem.itemType == "Equipment":
+                screen.draw.text(selectedItem.name, (xOrient + 110, yOrient + 10), color = "black", fontname = "old_englished_boots", fontsize = 35)
 
-        screen.draw.text("Type:" + " " + selectedItem.itemType, (xOrient + 110, yOrient + 40), color = "black", fontname = "old_englished_boots", fontsize = 35)
-        screen.draw.text("Weight:" + str(selectedItem.weight), (xOrient + 600, yOrient + 10), color = "black", fontname = "old_englished_boots", fontsize = 35)
-        screen.draw.text("Value:" + str(selectedItem.price), (xOrient + 740, yOrient + 10), color = "black", fontname = "old_englished_boots", fontsize = 35)
-        screen.draw.textbox(selectedItem.description, (xOrient + 110, yOrient + 80, 700, 100), color = "black", fontname = "knight", align = "left")
+            screen.draw.text("Type:" + " " + selectedItem.itemType, (xOrient + 110, yOrient + 40), color = "black", fontname = "old_englished_boots", fontsize = 35)
+            screen.draw.text("Weight:" + str(selectedItem.weight), (xOrient + 600, yOrient + 10), color = "black", fontname = "old_englished_boots", fontsize = 35)
+            screen.draw.text("Value:" + str(selectedItem.price), (xOrient + 740, yOrient + 10), color = "black", fontname = "old_englished_boots", fontsize = 35)
+            screen.draw.textbox(selectedItem.description, (xOrient + 110, yOrient + 80, 700, 100), color = "black", fontname = "knight", align = "left")
 
     def DrawWholeMenu(self):
         """Calls all the draw methods to make code cleaner
@@ -213,6 +217,7 @@ def GivePlayerItem(itemName:str, player:Player, gameManager:GameManager, quantit
 
 
 
+player1 = Player(500, 10, 3)
 
 #Sets up all game manager systems
 spriteC = SpriteConstants()
@@ -225,21 +230,15 @@ menuDraw = MenuManagerDraw(menuManager)
 gameDraw = GameManagerDraw(gameManager)
 inventoryDraw = InventoryManagerDraw(inventoryManager)
 menuManager.AttachMenuDraw(menuDraw)
-
 shopMenuManager = ShopMenuManager()
 shopMenuManager.InitShopStockOnStart(gameManager)
 shopDraw = InventoryManagerDraw(shopMenuManager)
 shopMenuManager.AttachMenuDraw(shopDraw)
 inventoryManager.AttachMenuDraw(inventoryDraw)
+townManager = TownManager(gameManager, combatManager, menuManager, shopMenuManager, player1)
 
 
 
-playerActor = Actor("player_idle_1", scale = 0.4, midbottom = (150, 500), anchor = ("middle", "bottom"))
-playerActor.scale = 0.4
-playerActor.midbottom = (150, 650)
-playerActor.images = ['player_idle_1', 'player_idle_2', 'player_idle_3', 'player_idle_4', 'player_idle_5', "end"]
-playerActor.fps = 6
-player1 = Player(500, 10, 3, playerActor)
 
 receiveGildedCutlass = MenuOption("Gilded Cutlassp", GivePlayerItem, ["Gilded Cutlass", player1, gameManager, 1] )
 receivePaladinsPlatemail = MenuOption("Paladin's Platemale", GivePlayerItem, ["Paladin's Platemail", player1, gameManager, 1])
@@ -250,11 +249,7 @@ receive50Gold = MenuOption("50 Gold", player1.SetGoldAndDisplayGold, [player1.Ge
 
 
 
-player1.idleSprites = ['player_idle_1', 'player_idle_2', 'player_idle_3', 'player_idle_4', 'player_idle_5', "end"]
-player1.attackSprites = ["player_attack_1", "player_attack_2", "player_attack_3", "player_attack_4", "player_attack_5", "end"]
-player1.hurtSprites = ["player_hurt_1", "player_hurt_2", "player_hurt_3", "player_hurt_4", "player_hurt_5", "end"]
-player1.attackOffset = [38, 20]
-player1.hurtOffset = [-5, 10]
+
 player1.AddAttack(combatManager.attackDict["Searing Slash"])
 player1.AddAttack(combatManager.attackDict["Crippling Blow"])
 player1.AddAttack(combatManager.attackDict["Miasma"])
@@ -263,16 +258,12 @@ player1.AddAttack(combatManager.attackDict["Miasma"])
 backPack = Actor("closed_backpack", (100, 80), anchor = ("right", "bottom"))
 backPack.scale = 4
 
-cutlass = Actor("gilded_cutlass", (400, 400))
-cutlass.scale = 2
+
 keysPressed = []
 
 
-gameManager.gameState = 0
 
-GivePlayerItem("Paladin's Platemail", player1, gameManager, 1)
-GivePlayerItem("Paladin's Platemail", player1, gameManager, 1)
-GivePlayerItem("Paladin's Platemail", player1, gameManager, 1)
+
 GivePlayerItem("Paladin's Platemail", player1, gameManager, 1)
 GivePlayerItem("Gilded Cutlass", player1, gameManager, 1)
 GivePlayerItem("Health Potion", player1, gameManager, 5)
@@ -327,12 +318,8 @@ def draw():
 
 
 turnStarted = False
-initUnitAction = False
-playerAttacking = False
 def update():
     global turnStarted
-    global initUnitAction
-    global playerAttacking
     gameManager.UpdateDisplayGold(player1)
 
 
@@ -344,6 +331,7 @@ def update():
 
 
     if len(gameManager.activeMenus) > 0:
+        gameManager.activeMenus[0].CheckIfMenuEmpty()
         gameManager.activeMenus[0].RunClassSpecificMethods(player1)
     
 
@@ -356,26 +344,12 @@ def update():
     #Only active during combat
     if gameManager.gameState == 2:
 
-        #This runs when the player selects their final option during combat. It runs the attack computations
-        #and sets unit sprites to reflect the action
-        if initUnitAction == True and combatManager.playerTurn == True:
-            if combatManager.playerSelectedAction == "Fight":
-                combatManager.HandleAttack(player1, combatManager.playerSelectedTarget, player1.AttackTarget(combatManager.playerSelectedTarget, combatManager.playerSelectedAttack))
-                player1.SetSprites(player1.attackSprites)
-                combatManager.playerSelectedTarget.SetSprites(player1.hurtSprites)
-            if combatManager.playerSelectedAction == "Item":
-                player1.SetSprites(player1.hurtSprites)
-
-
-            playerAttacking = True
-            combatManager.playerTurn = False
-                    
-        
+     
         #Signals the end of the enemy's attack by their images set returning to idle
-        if player1.actor.images == player1.idleSprites and playerAttacking == True:  
+        if player1.actor.images == player1.idleSprites and combatManager.playerAttacking == True:  
             #Resets these variables so the next enemy can take their turn
             combatManager.enemyTurn = True
-            playerAttacking = False
+            combatManager.playerAttacking = False
 
 
 
@@ -390,7 +364,7 @@ def update():
                 combatManager.enemyTurn = False
                 combatManager.LowerStatusDurations(player1)
                 combatManager.ApplyStatusEffects(player1)
-                initUnitAction = False
+                combatManager.initUnitAction = False
 
                 
                 #This is reset for next enemy turn
@@ -399,7 +373,7 @@ def update():
                 #Re-enables player action menu and sets it back to first menu
                 menuManager.showMenu = True
                 combatManager.CheckPlayerAvailableActions(player1) 
-                combatManager.initCombatMenuOptions(menuManager)
+                combatManager.initCombatMenuOptions(menuManager, player1, False)
 
         #This condition is always true during the enemy turn
         if combatManager.enemyTurn == True:
@@ -419,11 +393,11 @@ def update():
             #The inclusion of the player offset values is meant to factor in the sprite offset for different sprite sets moving the player actor
             if curEnemy.actor.pos == (player1.actor.right + (images.fire_enemy_1.get_width()/2) + player1.curOffset[0], player1.actor.bottom + player1.curOffset[1]):
                 
-                if initUnitAction:
+                if combatManager.initUnitAction:
                     curEnemy.SetSprites(curEnemy.attackSprites)
                     player1.SetSprites(player1.hurtSprites)
                     combatManager.RunEnemyTurn(curEnemy, player1)
-                    initUnitAction = False
+                    combatManager.initUnitAction = False
 
 
                 #Signals the end of the enemy's attack by their images set returning to idle
@@ -431,7 +405,7 @@ def update():
                     
                     #Resets these variables so the next enemy can take their turn
                     turnStarted = False
-                    initUnitAction = True
+                    combatManager.initUnitAction = True
 
 
 
@@ -442,7 +416,7 @@ def update():
 
         #Changes to victory screen if all enemies have died
         if len(combatManager.activeEnemyList) == 0:
-            gameManager.gameState = 3
+            gameManager.CloseCombatInitVictoryScreen(combatManager, menuManager)
 
 
 
@@ -458,9 +432,11 @@ def update():
             combatManager.initVictoryScreen = False
         
 
-        if combatManager.victoryScreen.pos == (0 + images.combat_complete.get_width()/2, 0 + images.combat_complete.get_height()/2):
+        if combatManager.victoryScreen.pos == (0 + images.combat_complete.get_width()/2, 0 + images.combat_complete.get_height()/2) and combatManager.victoryScreenAnimationComplete == False:
             sounds.chain_pulley.stop()
+            player1.SetGold(player1.GetGold() + random.randint(5, 15))
             combatManager.CompleteVictoryAnimation()
+
         
 
 
@@ -487,10 +463,11 @@ def on_mouse_down(pos, button):
         
 
         if button == mouse.LEFT:
+            gameManager.activeMenus[0].RunClassSpecificMouseDownMethods(player1, pos, gameManager)
             if gameManager.activeMenus[0].menuExitButton.obb_collidepoint(pos[0], pos[1]):
                 gameManager.activeMenus[0].CloseMenu(gameManager)
 
-            gameManager.activeMenus[0].RunClassSpecificMouseDownMethods(player1, pos)
+            
 
     
 
@@ -514,12 +491,11 @@ def on_mouse_down(pos, button):
 
 
 def on_key_down(key):
-    global initUnitAction
-    
-    
-    if key == keys.M:
+    #Opens the player menu with M
+    if key == keys.M and inventoryManager.showMenu == False:
         inventoryManager.OpenMenu(player1, gameManager)
 
+    #This code moves the selected item position for whichever menu was opened last
     if len(gameManager.activeMenus) > 0:
         if key == keys.S:
             gameManager.activeMenus[0].MoveChoiceDown()
@@ -567,41 +543,39 @@ def on_key_down(key):
 
                 #Reset select hover to the top of the menu
                 menuManager.selectAction.center = (150, 750)
+        
+        if key == keys.RETURN:
+            
+            #Running both of these in the same key press causes issues related to the menu option changing the list and messing
+            #with the desired output of the RunSelectFunction
+            menuManager.ResetMenuOnChoice()
+            if type(menuManager.menuOptions[menuManager.menuChoice]) == MenuOption:
+                menuManager.menuOptions[menuManager.menuChoice].RunFunction()
+            menuManager.RunSelectFunction()
 
+            #Any changes made to the menu options or selectFunction made by the lines above are delayed until after they have all run, at which
+            #point they update
+            menuManager.RefreshMenuOptions()
+            menuManager.RefreshSelectFunctionAndParams()
+            
 
-
-
-
+            
+        
     if gameManager.gameState == 0:
         if key == keys.SPACE:
             if gameManager.showTitleScreen == True:
                 menuManager.menuOptions = [receiveGildedCutlass, receivePaladinsPlatemail, receive50Gold]
                 gameManager.showTitleScreen = False
                 menuManager.showMenu = True
+                menuManager.SetSelectFunctionAndParams(gameManager.CloseTitleScreenInitTown, [menuManager, townManager])
 
-        if gameManager.showTitleScreen == False:
-            if key == keys.RETURN:
-                menuManager.menuOptions[menuManager.menuChoice].RunFunction()
-                menuManager.CloseMenuAndResetPosition()
-                gameManager.gameState = 1
-                gameManager.SetBackground(1)
-                shopMenuManager.OpenMenu(gameManager)
+        
                 
-
-    
-    elif gameManager.gameState == 1:
-        if key == keys.RETURN:
-            combatManager.InitializeCombat(3, player1, menuManager)
-            menuManager.menuChoice = 0
-            menuManager.showMenu = True
-
-
-
     elif gameManager.gameState == 2:
         if combatManager.playerTurn == True and inventoryManager.showMenu == False:
             if key == keys.ESCAPE:
                 if combatManager.turnPhase == 1:
-                    combatManager.initCombatMenuOptions(menuManager)
+                    combatManager.initCombatMenuOptions(menuManager, player1)
                     combatManager.turnPhase -= 1
                     combatManager.playerSelectedAction = None
                     menuManager.ResetMenuOnChoice()
@@ -613,51 +587,6 @@ def on_key_down(key):
                     menuManager.ResetMenuOnChoice()
                     
 
-            if key == keys.RETURN:
-
-                #Player chooses which action they would like to take
-                if combatManager.turnPhase == 0:
-                    if menuManager.menuOptions[menuManager.menuChoice] == "Fight":
-                        combatManager.playerSelectedAction = menuManager.menuOptions[menuManager.menuChoice]
-                        menuManager.menuOptions = combatManager.activeEnemyList
-                        combatManager.turnPhase += 1
-
-                    elif menuManager.menuOptions[menuManager.menuChoice] == "Item":
-                        combatManager.playerSelectedAction = menuManager.menuOptions[menuManager.menuChoice]
-                        menuManager.menuOptions = player1.GetConsumableItems()
-                        combatManager.turnPhase += 1
-
-                elif combatManager.turnPhase == 1:
-                    if combatManager.playerSelectedAction == "Fight":
-                        combatManager.playerSelectedTarget = menuManager.menuOptions[menuManager.menuChoice]
-                        menuManager.menuOptions = player1.attackList
-                        combatManager.turnPhase += 1
-                    elif combatManager.playerSelectedAction == "Item":
-
-                        #Activates the selected consumable and ends the player's turn
-                        menuManager.menuOptions[menuManager.menuChoice].ActivateItem(player1)
-                        player1.InventoryCheck()
-                        combatManager.turnPhase += 2
-
-
-                elif combatManager.turnPhase == 2:
-                    combatManager.playerSelectedAttack = menuManager.menuOptions[menuManager.menuChoice]  
-                    combatManager.turnPhase += 1
-
-                
-                
-
-
-                #This code runs after turn phase is incremented to ensure it is reset to 0 for the next turn
-                if combatManager.turnPhase == 3:
-                    combatManager.turnPhase = 0
-                    menuManager.menuChoice = 0
-                    menuManager.showMenu = False  
-
-                    if combatManager.playerSelectedAction == "Fight" or combatManager.playerSelectedAction == "Item":
-                        initUnitAction = True
-                
-                menuManager.ResetMenuOnChoice()
                         
 
     if gameManager.gameState == 3:

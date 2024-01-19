@@ -3,10 +3,10 @@ class ItemTemplate:
     """This class is at the top of the item inheritance hierarchy. It contains properties and 
     methods that are implemented by all items
     """    
-    def __init__(self, price, description, itemName, itemType, quantity, weight, sprite):
+    def __init__(self, price, description, name, itemType, quantity, weight, sprite):
         self.price = price
         self.description = description
-        self.itemName = itemName
+        self.name = name
         self.itemType = itemType
         self.quantity = quantity
         self.weight = weight
@@ -37,7 +37,7 @@ class ItemTemplate:
         pass
 
     def __repr__(self):
-        return self.itemName + " OBJ"
+        return self.name + " OBJ"
     
 
 
@@ -48,8 +48,8 @@ class ConsumableItem(ItemTemplate):
     Args:
         ItemTemplate (ItemTemplate): ConsumableItem is a child of the ItemTemplate class
     """    
-    def __init__(self, price, description, itemName, quantity, weight, sprite):
-        super().__init__(price, description, itemName, "Consumable", quantity, weight, sprite)
+    def __init__(self, price, description, name, quantity, weight, sprite):
+        super().__init__(price, description, name, "Consumable", quantity, weight, sprite)
 
 
 class EquipmentItem(ItemTemplate):
@@ -58,9 +58,9 @@ class EquipmentItem(ItemTemplate):
     Args:
         ItemTemplate ((_ItemTemplate_): EquipmentItem is a child of the ItemTemplate class
     """    
-    def __init__(self, price, description, itemName, weight, sprite):
+    def __init__(self, price, description, name, weight, sprite):
         #Quantity will always be one for eqipment items as you cannot stack them
-        super().__init__(price, description, itemName, "Equipment", 1, weight, sprite)
+        super().__init__(price, description, name, "Equipment", 1, weight, sprite)
 
     
     def DeactivateItem(self, player):
@@ -75,8 +75,8 @@ class EquipmentItem(ItemTemplate):
 
 
 class DamageIncreaseItem(EquipmentItem):
-    def __init__(self, price, description, itemName, dmgBuff, weight, sprite):
-        super().__init__(price, description, itemName, weight, sprite)
+    def __init__(self, price, description, name, dmgBuff, weight, sprite):
+        super().__init__(price, description, name, weight, sprite)
         self.dmgBuff = dmgBuff
 
     def UseItem(self, player):
@@ -86,8 +86,8 @@ class DamageIncreaseItem(EquipmentItem):
         player.SetStrength(player.GetStrength() - self.dmgBuff)
 
 class HealthIncreaseItem(EquipmentItem):
-    def __init__(self, price, description, itemName, hpBuff, weight, sprite):
-        super().__init__(price, description, itemName, weight, sprite)
+    def __init__(self, price, description, name, hpBuff, weight, sprite):
+        super().__init__(price, description, name, weight, sprite)
         self.hpBuff = hpBuff
 
 
@@ -104,8 +104,8 @@ class HealthIncreaseItem(EquipmentItem):
 
 
 class HealingItem(ConsumableItem):
-    def __init__(self, price, description, itemName, healValue, quantity, weight, sprite):
-        super().__init__(price, description, itemName, quantity, weight, sprite)
+    def __init__(self, price, description, name, healValue, quantity, weight, sprite):
+        super().__init__(price, description, name, quantity, weight, sprite)
         self.healValue = healValue
 
     def UseItem(self, player):
@@ -113,8 +113,8 @@ class HealingItem(ConsumableItem):
         self.quantity -= 1
 
 class BuffItem(ConsumableItem):
-    def __init__(self, price, description, itemName, quantity, weight, sprite, buff, duration, hpCost = 0):
-        super().__init__(price, description, itemName, quantity, weight, sprite)
+    def __init__(self, price, description, name, quantity, weight, sprite, buff, duration, hpCost = 0):
+        super().__init__(price, description, name, quantity, weight, sprite)
         self.buff = buff
         self.duration = duration
         self.hpCost = hpCost

@@ -24,7 +24,7 @@ class InventoryManager(ItemMenuManager):
     def RunMethods(self, player):
         pass
 
-    def RunMouseDownMethods(self, player, pos):
+    def RunMouseDownMethods(self, player, pos, gameManager):
         pass
     
 

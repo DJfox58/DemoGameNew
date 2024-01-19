@@ -40,6 +40,8 @@ class ItemMenuManager:
 
         self.attachedDraw = None
 
+        self.menuEmpty = True
+
 
         self.inventoryBackground = Actor("inventory_background", topleft = (140, 100))    
         self.menuExitButton = Actor("x_button", topright = (self.inventoryBackground.topright))
@@ -92,14 +94,14 @@ class ItemMenuManager:
         
         #Loops as many times as there are items in the current invetory setup
         for i in range(loops):
-            curHighest = menuList[0].itemName
+            curHighest = menuList[0].name
             curHighestIndex = 0
 
             #Checks for the first item alphabetically 
             #and then formats into an ordered list and deletes it from the old list
             for j in range(len(menuList)):
-                if menuList[j].itemName < curHighest:
-                    curHighest = menuList[j].itemName
+                if menuList[j].name < curHighest:
+                    curHighest = menuList[j].name
                     curHighestIndex = j
 
             sortingList.append(menuList[curHighestIndex])
@@ -136,7 +138,7 @@ class ItemMenuManager:
                     curHighestIndex = j
                 #If there is a tie in quantity, go by name
                 elif menuList[j].quantity == curHighest:
-                    if menuList[j].itemName < menuList[curHighestIndex].itemName:
+                    if menuList[j].name < menuList[curHighestIndex].name:
                         curHighest = menuList[j].quantity
                         curHighestIndex = j
 
@@ -174,7 +176,7 @@ class ItemMenuManager:
                     curHighestIndex = j
                 #If there is a tie in weight, go by name
                 elif menuList[j].weight == curHighest:
-                    if menuList[j].itemName < menuList[curHighestIndex].itemName:
+                    if menuList[j].name < menuList[curHighestIndex].name:
                         curHighest = menuList[j].weight
                         curHighestIndex = j
 
@@ -212,7 +214,7 @@ class ItemMenuManager:
                     curHighestIndex = j
                 #If there is a tie in value, go by name
                 elif menuList[j].price == curHighest:
-                    if menuList[j].itemName < menuList[curHighestIndex].itemName:
+                    if menuList[j].name < menuList[curHighestIndex].name:
                         curHighest = menuList[j].price
                         curHighestIndex = j
 
@@ -223,14 +225,20 @@ class ItemMenuManager:
         return sortingList
         
 
+    def CheckIfMenuEmpty(self):
+        if len(self.curMenuOrder) == 0:
+            self.menuEmpty = True
+        else:
+            self.menuEmpty = False
+
     def RunClassSpecificMethods(self, player = None):
         """Child classes should implement this to run menu specific methods in update()
         """
         self.RunMethods(player)  
 
 
-    def RunClassSpecificMouseDownMethods(self, player, pos):
-        self.RunMouseDownMethods(player, pos)
+    def RunClassSpecificMouseDownMethods(self, player, pos, gameManager):
+        self.RunMouseDownMethods(player, pos, gameManager)
           
 
     def AttachMenuDraw(self, menuDrawObject):
@@ -256,8 +264,10 @@ class ItemMenuManager:
             #If the mouse is in the larger rectangle, this code will run to pinpoint its exact location
             for i in range(len(self.mouseDetectorRects)):
                 if self.mouseDetectorRects[i].collidepoint(pos[0], pos[1]):
-                    self.rectDetected = i
-                    return i
+                    #This check ensures that the position hovered by the mouse has an item to display
+                    if i <= len(self.curMenuOrder) - 1:
+                        self.rectDetected = i
+                        return i
                 
         return -1
 
@@ -416,3 +426,11 @@ class ItemMenuManager:
             else:
                 self.inventoryItemSelect.bottom -= 70
                 self.menuPosition -= 1
+
+
+    def LowerItemQuantity(self, itemObj):
+        itemObj.quantity -= 1
+        if itemObj.quantity == 0:
+            if self.menuChoice == len(self.curMenuOrder) - 1:
+                self.MoveChoiceUp()
+            self.curMenuOrder.pop(self.curMenuOrder.index(itemObj))

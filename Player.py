@@ -1,9 +1,16 @@
 import random
 from GameItems import *
 from Unit import Unit 
+from pgzhelper import *
 class Player(Unit):
-    def __init__(self, health, strength, speed, actor):
-        super().__init__("Player", health, strength, speed, actor)
+    def __init__(self, health, strength, speed):
+
+        actorInp = Actor("player_idle_1", scale = 0.4, midbottom = (150, 500), anchor = ("middle", "bottom"))
+        actorInp.scale = 0.4
+        actorInp.midbottom = (150, 650)
+        actorInp.images = ['player_idle_1', 'player_idle_2', 'player_idle_3', 'player_idle_4', 'player_idle_5', "end"]
+        actorInp.fps = 6
+        super().__init__("Player", health, strength, speed, actorInp)
         
         #gold represents the player's actual amount of gold the player has
         #display gold is for UI elements to update the gold value incrementally rather than all at once
@@ -21,6 +28,12 @@ class Player(Unit):
         Stores easily accessible references to the items held by the player(easier to find specific items than inventory).
         Key is the itemName of the itemObject. The value is a reference to the itemObject
         """  
+
+        self.idleSprites = ['player_idle_1', 'player_idle_2', 'player_idle_3', 'player_idle_4', 'player_idle_5', "end"]
+        self.attackSprites = ["player_attack_1", "player_attack_2", "player_attack_3", "player_attack_4", "player_attack_5", "end"]
+        self.hurtSprites = ["player_hurt_1", "player_hurt_2", "player_hurt_3", "player_hurt_4", "player_hurt_5", "end"]
+        self.attackOffset = [38, 20]
+        self.hurtOffset = [-5, 10]
 
 
     def __repr__(self):
@@ -82,10 +95,14 @@ class Player(Unit):
         Args:
             itemObject (_ItemTemplate_): The object can be any child of the ItemTemplate class
             quantity (_int_): the number of items being added to the player inventory. This is only relevant to consumables
-        """        
-        if itemObject in self.inventory:
-            self.inventory[self.inventory.index(itemObject)].quantity += quantity
-        else:
+        """  
+        #Checks to see if the player already has an item of this type in their inventory      
+        itemFound = False
+        for invItem in self.inventory:
+            if itemObject.name == invItem.name:
+                self.itemDict[itemObject.name].quantity += quantity
+                itemFound = True
+        if itemFound == False:
 
             #When the object is added, it's quantity should already be initialized
             itemObject.quantity = quantity
@@ -99,8 +116,8 @@ class Player(Unit):
         Args:
             itemObject (_ItemTemplate_): The object can be any child of the ItemTemplate class
         """        
-        if self.itemDict.get(itemObject.itemName, "no item") == "no item":
-            self.itemDict[itemObject.itemName] = itemObject
+        if self.itemDict.get(itemObject.name, "no item") == "no item":
+            self.itemDict[itemObject.name] = itemObject
 
     def AddItemToInventoryAndInitialize(self, itemObject:ItemTemplate, quantity:int):
         """Adds a new item to the player's inventory, dictList, and activates the effect 
@@ -131,7 +148,7 @@ class Player(Unit):
             print("Error, item not found in player's inventory. Unable to remove")
 
     def RemoveItemFromItemDict(self, itemObject):
-        self.itemDict.pop(itemObject.itemName)
+        self.itemDict.pop(itemObject.name)
 
     def RemoveItemFromInventoryAndDisable(self, itemObject:ItemTemplate, player):
         """Combines multiple methods to fully remove any reference of an item from the player object
@@ -145,6 +162,8 @@ class Player(Unit):
 
 
     def AttackTarget(self, target, chosenAttack):
+        print("TARGET", target)
+        print("ATTACK", chosenAttack)
         """Takes an attack object and calls its attack method. Also prints out a line saying saying which unit
         attacked which, and what attack was used
 

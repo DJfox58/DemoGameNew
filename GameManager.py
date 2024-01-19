@@ -46,6 +46,8 @@ class GameManager:
         """        
         if player.displayGold < player.gold:
             player.displayGold += 1
+        elif player.displayGold > player.gold:
+            player.displayGold -= 1
                
 
     #Make a copy of the requested item from the gameItemDict
@@ -108,8 +110,58 @@ class GameManager:
             backgroundIndex (int): the index of the background sprite name in the backgrounds list
         """        
         self.curBackground = backgroundIndex
-        
+
     
 
 
 
+    #The following methods are used to transition cleanly between game states and clean up and reset
+    #Any variables used in these game states
+
+#-----------------------------------------------
+    def CloseTitleScreen(self, menuManager):
+        menuManager.CloseMenuAndResetPosition()
+        menuManager.ResetSelectFunctionAndParams()
+        
+    
+    def InitTown(self, menuManager, townManager):
+        townManager.InitTownMenuOptions(menuManager)
+        menuManager.showMenu = True
+        self.gameState = 1
+        self.SetBackground(1)
+
+
+    def CloseTitleScreenInitTown(self, menuManager, townManager):
+        self.CloseTitleScreen(menuManager)
+        self.InitTown(menuManager, townManager)
+        
+
+    def CloseTown(self, menuManager):
+        menuManager.CloseMenuAndResetPosition()
+        menuManager.ResetSelectFunctionAndParams()
+
+
+    def CloseCombat(self, combatManager, menuManager):
+        combatManager.EndCombat()
+        menuManager.CloseMenuAndResetPosition()
+
+    def initVictoryScreen(self, combatManager):
+        self.gameState = 3
+
+    def CloseCombatInitVictoryScreen(self, combatManager, menuManager):
+        self.CloseCombat(combatManager, menuManager)
+        self.initVictoryScreen(combatManager)
+
+    def InitCombat(self, combatManager, menuManager, player1):
+        combatManager.InitializeCombat(1, player1, menuManager, True)
+        menuManager.menuChoice = 0
+        menuManager.showMenu = True
+        self.SetBackground(2)
+        self.gameState = 2
+
+    def CloseTownInitCombat(self, combatManager, menuManager, player):
+        self.CloseTown(menuManager)
+        self.InitCombat(combatManager, menuManager, player)
+
+#-----------------------------------------------------------------------
+      
