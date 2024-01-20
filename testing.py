@@ -1,17 +1,17 @@
-import pgzrun
-from pgzhelper import *
-import GameManager
+saveFile = open("save1.txt", "r")
 
-WIDTH = 500
-HEIGHT = 500
+babo = saveFile.readlines()
 
-def draw():
-    screen.clear()
-    x -= 1
+saveFile.close()
 
-manager1 = GameManager
-manager2 = GameManager
+listToType = ["fifty 6", "forutnee 1"]
+saveFile = open("save1.txt", "w")
 
-list1 = [manager1]
+for item in listToType:
+    saveFile.write(item + "\n")
 
-pgzrun.go()
+
+saveFile.close()
+
+print("BABO")
+print(babo)

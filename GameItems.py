@@ -12,10 +12,7 @@ class ItemTemplate:
         self.weight = weight
         self.spriteName = sprite
 
-    def InspectItem(self):
-        print(self.description)
-
-    
+  
     def ActivateItem(self, player):
         """Uses the item's given effect. Calls the UseItem() method of the item, which is unique
         to each item.
@@ -29,7 +26,8 @@ class ItemTemplate:
     
     def DeactivateItem(self, player):
         """For non-equipment items, this allows them to use the method without throwing an error.
-    The method does nothing for any non-equipment item
+    The method does nothing for any non-equipment item. For equipment items, this removes their buff/effect from the player
+    Used for when an item is sold or put in storage
 
         Args:
             player (_Player_): Player character object
@@ -44,6 +42,7 @@ class ItemTemplate:
 
 class ConsumableItem(ItemTemplate):
     """Items that can be consumed for a one-time/temporary effect.
+    These items are not unique and can be stacked to a quantity greater than 1
 
     Args:
         ItemTemplate (ItemTemplate): ConsumableItem is a child of the ItemTemplate class

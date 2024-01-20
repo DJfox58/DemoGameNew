@@ -1,7 +1,7 @@
 import pgzrun
 from pgzhelper import *
 from Player import Player
-from GameManager import GameManager
+from pygame import Rect
 class MenuManager:
     
     def __init__(self, attachedMenuDraw=""):
@@ -30,6 +30,11 @@ class MenuManager:
         """Starts at 0 on the first menu choice
         """        
         
+        self.menuPosition = 0
+        """ range between 0 and 2
+        the page doesn't affect this, it just means where the action select cursor is
+        """        
+
         self.menuPage = 0
         """The current page the menu selection is on.
         Each page contains 3 options"""
@@ -45,12 +50,31 @@ class MenuManager:
         Used in combat to keep target and choice selection code clean
         """      
         self.functionOnSelectParams = []  
+        """Stores the parameters needed to run the selectFunction
+        """        
 
 
         self.lateSelectFunctionUpdate = []
         """Holds the function and fnd parameters requested to be updated. Used in refresh setSelectFunctionAndParams after
         all option select related methods have already run
         """        
+
+        self.previousMenuPhases = []
+        """Stores the previous menus in a set of menu selects so the player can return back to change their choices if they desire
+        each previous menu is stored in a list with info as follows: [menuOptionsList, selectOptionFnc, selectOptionFncParams]
+        the item at index 0 is removed when an option is undone to remove it as a prev menu since the undo action has taken place
+        """        
+
+        self.menuDetectorRects = []
+        for i in range(3):
+            self.menuDetectorRects.append(Rect((70, 720 + (i * 100)), (170, 60)))
+
+        self.rightArrow = Actor("right_arrow_inactive", (self.selectAction.right + 15, 850))
+        self.leftArrow = Actor("right_arrow_inactive", (self.selectAction.left - 15, 850))
+        self.leftArrow.flip_x = True
+
+
+        self.arrowsActive = [0, 0]
 
     def ResetMenuPosition(self):
         """Doesn't make the menu dissapear, but returns it to it's default position.
@@ -67,6 +91,7 @@ class MenuManager:
         self.showMenu = False
         self.menuChoice = 0
         self.menuPage = 0
+        self.menuPosition = 0
         self.selectAction.center = (150, 750)
         
     def AttachMenuDraw(self, menuDraw):
@@ -87,13 +112,33 @@ class MenuManager:
         """        
         if self.menuPage > 0:
             self.menuChoice = (self.menuChoice - (self.menuPage * 3))
+            
 
         if self.menuChoice > len(self.menuOptions) -1:    
             self.menuChoice = len(self.menuOptions) - 1
+            self.menuPosition = len(self.menuOptions) -1
 
         self.menuPage = 0
         self.selectAction.center = (150, 750 + (100 * self.menuChoice))
-        self.menuPage = 0
+
+    def MoveMenuPageRight(self):
+        oldVal = self.menuChoice
+        self.menuChoice += 3
+
+        if self.menuChoice > len(self.menuOptions) - 1:
+            self.menuChoice = len(self.menuOptions) - 1
+            print(self.menuChoice - oldVal, "THIS IS POS")
+            self.menuPosition = self.menuChoice % 3
+        self.menuPage += 1
+        self.CheckPageArrowsActive()
+
+        self.selectAction.center = (150, 750 + (self.menuPosition * 100))
+
+    def MoveMenuPageLeft(self):
+        self.menuChoice -= 3
+        self.menuPage -= 1
+        self.CheckPageArrowsActive()
+        
 
 
     def MoveChoiceDown(self):
@@ -105,6 +150,7 @@ class MenuManager:
         if self.menuChoice < len(self.menuOptions)-1 and self.menuChoice < 2 + self.menuPage*3:
             self.selectAction.bottom += 100
             self.menuChoice += 1
+            self.menuPosition += 1
 
     def MoveChoiceUp(self):
         """Moves the menu choice up by 1. This method is constrained by the min choice per page.
@@ -113,6 +159,7 @@ class MenuManager:
         if self.menuChoice > 0 + self.menuPage*3:
             self.selectAction.bottom -= 100
             self.menuChoice -= 1
+            self.menuPosition -= 1
 
     def RunSelectFunction(self):
         """This method runs every time a menu option is selected
@@ -157,6 +204,99 @@ class MenuManager:
     def ResetSelectFunctionAndParams(self):
         self.functionOnSelect = None
         self.functionOnSelectParams.clear()
+
+
+    def StoreMenuPhaseVariables(self):
+        """When a menu choice is selected that isn't an action, but leads to more menus, the player
+        has the option to press ESCAPE to go back to the previous menu. When one of these options is selected
+        this method stores the menu's attributes in a list to allow the code to easily fall back to prev menus
+        """        
+        prevMenuPhase = [self.menuOptions, self.functionOnSelect, self.functionOnSelectParams]
+        self.previousMenuPhases.insert(0, prevMenuPhase)
+
+    
+    def UndoMenuChoice(self):
+        """When the player wants to undo a menu choice. This method finds the most recent stored menu and rolls back menu attributes
+        to that menu
+        """    
+        self.menuOptions = self.previousMenuPhases[0][0]
+        self.newMenuOptions = self.previousMenuPhases[0][0]
+        self.functionOnSelect = self.previousMenuPhases[0][1]
+        self.functionOnSelectParams = self.previousMenuPhases[0][2]
+        self.previousMenuPhases.pop(0)
+
+
+    def ClearStoredMenuPhases(self):
+        """After a irreversable action is taken, the stored menu phase cache should be cleared to 
+        prevent the player from unintentionally going back to a menu phase they weren't supposed to 
+        """        
+        self.previousMenuPhases.clear()
+
+
+    def CheckMouseCollision(self, pos):
+        """Takes in mouse pos to check if the mouse is hovering over any Menu options
+
+        Args:
+            pos (_[int, int]_): current mouse pos
+        """        
+
+        self.rectDetected = -1
+
+        #If the mouse is in the larger rectangle, this code will run to pinpoint its exact location
+        for i in range(len(self.menuDetectorRects)):
+            if self.menuDetectorRects[i].collidepoint(pos[0], pos[1]):
+                #This check ensures that the position hovered by the mouse has an item to display
+                if i <= len(self.menuOptions) - 1 - self.menuPage*3:
+                    self.rectDetected = i
+                    return i
+            
+        return -1
+    
+    def CheckMouseCollisionAndSetMenuPosition(self, pos):
+        """Checks if the mouse is hovering over any menu options and sets them as the new selected option
+
+        Args:
+            pos (_type_): _description_
+        """        
+        newMenuPosition = self.CheckMouseCollision(pos)
+    
+
+        if newMenuPosition != -1:
+            changeInPosition = newMenuPosition - self.menuPosition
+            self.menuPosition = newMenuPosition
+            self.menuChoice += changeInPosition
+            self.selectAction.bottom += (changeInPosition * 100)
+
+    def CheckPageArrowsActive(self):
+        self.arrowsActive[0] = 0
+        self.arrowsActive[1] = 0
+        self.leftArrow.image = "right_arrow_inactive"
+        self.rightArrow.image = "right_arrow_inactive"
+        if self.menuPage > 0:
+            self.arrowsActive[0] = 1
+            self.leftArrow.image = "right_arrow_active"
+        if self.menuPage < (len(self.menuOptions)-1) // 3:
+            self.arrowsActive[1] = 1
+            self.rightArrow.image = "right_arrow_active"
+
+        self.leftArrow.flip_x = True
+
+    def ChooseOption(self):
+        """Used when the player selects a menu options. Runs the current option methods and updates menu options and the select function
+        after they have all run
+        """        
+        
+        
+        if type(self.menuOptions[self.menuChoice]) == MenuOption:
+            self.menuOptions[self.menuChoice].RunFunction()
+        self.RunSelectFunction()
+
+        #Any changes made to the menu options or selectFunction made by the lines above are delayed until after they have all run, at which
+        #point they update
+        self.RefreshMenuOptions()
+        self.RefreshSelectFunctionAndParams()
+        self.ResetMenuOnChoice()
+        self.CheckPageArrowsActive()
 
     
 

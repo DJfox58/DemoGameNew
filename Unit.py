@@ -93,9 +93,15 @@ class Unit:
 
         Args:
             decVal (_int_): the amount of turns the status is being reduced by 
-        """        
+        """     
+        statusesToRemove = []   
         for status in self.statusDict:
             self.statusDict[status] -= decVal
+            if self.statusDict[status] == 0:
+                statusesToRemove.append(status)
+
+        for status in statusesToRemove:
+            self.RemoveStatus(status)
 
     def AddAttack(self, attackObj):
         """Gives a unit an attack

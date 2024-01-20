@@ -70,9 +70,18 @@ class ItemMenuManager:
         
         #-1000 is the no sort active number
         self.curSort = -1000
+        """
+        1 = alphabetical sort
+        2 = quantity sort
+        3 = weight sort
+        4 = value sort
+        - of any means its reverse sort    
+        """        
+        self.sortArrowIndicator = Actor("menu_sort_arrow", (0, 0))
+        
+        
 
-
-        self.drawList = []
+        self.drawList = [self.sortArrowIndicator]
         """any actors placed in this list will be drawn while the list is active
         """        
 
@@ -295,6 +304,14 @@ class ItemMenuManager:
         #This return will always be -1
         return self.headerDetected
     
+    def SetSortArrowIndicator(self):
+        if -4 <= self.curSort <= 4:
+            self.sortArrowIndicator.midbottom = (self.headerBoxes[abs(self.curSort)-1].center[0], self.headerBoxes[abs(self.curSort)-1].top)
+            if self.curSort < 0:
+                self.sortArrowIndicator.flip_y = True
+            else:
+                self.sortArrowIndicator.flip_y = False
+
 
     def ChooseMenuSort(self, pos):
         sortType = self.CheckMouseCollisionInvHeaders(pos)
@@ -314,7 +331,8 @@ class ItemMenuManager:
             self.curSort = -sortType
         else:
             self.curSort = sortType
-            print("GO NORMAL")
+        
+        self.SetSortArrowIndicator()
         
 
 

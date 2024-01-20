@@ -44,6 +44,7 @@ class CombatManager:
         self.victoryScreenAnimationComplete = False
         """Runs methods after the inital animation has finished once
         """        
+    
         
         #Rewards for combat completion
         self.combatGoldReward = 0
@@ -270,14 +271,15 @@ class CombatManager:
         self.playerAttacking = False
 
 
-    def initCombatMenuOptions(self, menuManager:MenuManager, player:Player, delayed:bool):
+    def InitCombatMenuOptions(self, menuManager:MenuManager, player:Player, delayed:bool):
         """Provides the starting combat menu options (Fight Item Etc)
 
         Args:
             menuManager (MenuManager): menu manager
             player (Player): player
             delayed (bool): if true. This method puts the combat options in the delayed update list for options. If false it adds it normally
-        """             
+        """            
+        print("HES A RUNNER HES AT RACKSTAR") 
         actionList = [MenuOption("Fight", self.ChooseFightAction, (menuManager, player))]
         actionList.append(MenuOption("Item", self.ChooseItemAction, (menuManager, player)))
 
@@ -289,12 +291,34 @@ class CombatManager:
                 availableActionList.append(actionList[i])
             i += 1
 
+        #No matter what. This should always add to the newMenuOptions to keep it updated, but when you need to delay due to a menu choice
+        #The default menuOptions will not be updates
+        if not delayed:
+            menuManager.menuOptions = actionList
+        menuManager.newMenuOptions = actionList
+
+
+    def InitVictoryMenuOptions(self, menuManager:MenuManager, gameManager, townManager, player:Player, delayed):
+        """This starts the menu chain after the player finished a combat. This is the only method that needs to be run
+        The rest of the computation and code is run in menu manager through menu options
+
+        Args:
+            menuManager (MenuManager): main menuManager
+            gameManager (_Gamemanager_): main gameManager
+            townManager (_TownManager_): main townManager
+            player (Player): player
+            delayed (_bool_): if true. This method puts the combat options in the delayed update list for options. If false it adds it normally
+        """        
+        #GivePlayerCombatRewards is another menu option method that leads into more menu options
+        choiceList = [MenuOption("Receive Rewards", self.GivePlayerCombatRewards, [menuManager, gameManager, townManager, player])]
+
 
         #No matter what. This should always add to the newMenuOptions to keep it updated, but when you need to delay due to a menu choice
         #The default menuOptions will not be updates
         if not delayed:
-            menuManager.menuOptions = availableActionList
-        menuManager.newMenuOptions = availableActionList
+            menuManager.menuOptions = choiceList
+        menuManager.newMenuOptions = choiceList
+        menuManager.showMenu = True
 
 
     #Go through each unit in the turn order and prompt them to use a template UseAttack() methods
@@ -312,7 +336,7 @@ class CombatManager:
         """        
         self.activeUnitList.append(player)
         self.CreateEncounter(numEnemies)
-        self.initCombatMenuOptions(menuManager, player, delayed)
+        self.InitCombatMenuOptions(menuManager, player, delayed)
 
 
 
@@ -329,16 +353,38 @@ class CombatManager:
 
 
     def GenerateCombatRewards(self):
+        """Generates the rewards displayed on the victory screen 
+        NOTE: This method DOES NOT give the rewards to the player. The method that does that
+        is GivePlayerCombatRewards
+        """        
         self.combatGoldReward = random.randint(5, 15)
         if random.randint(1, 3) == 3:
             pass
             #give special reward or smth
+        
+
+
+    
     
 
     #--------------
     #All the methods featured below are used as MenuOption methods for combat action selects or the select run function for the menu manager
     #--------------
         
+    #This method is used for the victory screen
+    def GivePlayerCombatRewards(self, menuManager:MenuManager, gameManager, townManager, player:Player):
+        """Used to give the generated combat rewards to the player. Used as a menu option button.
+        This uses delayed menu setting to allow other menu methods to run before updating the options
+
+        Args:
+            player (_Player_): the player obj
+        """        
+        player.SetGold(player.GetGold() + self.combatGoldReward)
+        continueMenuChoices = [MenuOption("Continue", gameManager.CloseVictoryScreenInitCombat, [menuManager, self, player]), MenuOption("Return Home", gameManager.CloseVictoryScreenInitTown, [menuManager, townManager, self])]
+        menuManager.newMenuOptions = continueMenuChoices
+
+
+
 
     #PHASE 1 ACTIONS
     #These actions are the start of turn actions that denote primary actions a player can take
@@ -349,6 +395,7 @@ class CombatManager:
             menuManager (MenuManager): menu manager
             player (_Player_): player obj
         """        
+        menuManager.StoreMenuPhaseVariables()
         menuManager.newMenuOptions = self.activeEnemyList
         menuManager.SetSelectFunctionAndParamsLate(self.ChooseEnemy, [menuManager, player])
 
@@ -359,6 +406,7 @@ class CombatManager:
             menuManager (MenuManager): menu manager obj
             player (Player): player obj
         """        
+        menuManager.StoreMenuPhaseVariables()
         menuManager.newMenuOptions = player.GetConsumableItems()
         menuManager.SetSelectFunctionAndParamsLate(self.ChooseItem, [menuManager, player])
 
@@ -376,6 +424,8 @@ class CombatManager:
             menuManager (MenuManager): menu manager
             player (Player): player
         """               
+        print(menuManager.menuChoice, "CHOICE CHOICE")
+        menuManager.StoreMenuPhaseVariables()
         self.playerSelectedTarget = menuManager.menuOptions[menuManager.menuChoice]
         menuManager.newMenuOptions = player.attackList
         menuManager.SetSelectFunctionAndParamsLate(self.ChooseAttack, [menuManager, player])
@@ -391,6 +441,7 @@ class CombatManager:
         """        
         #Activates the selected consumable and ends the player's turn
         menuManager.menuOptions[menuManager.menuChoice].ActivateItem(player)
+        menuManager.ResetSelectFunctionAndParams()
         player.InventoryCheck()
         player.SetSprites(player.hurtSprites) 
         self.EndPlayerTurn(menuManager)
@@ -400,20 +451,28 @@ class CombatManager:
     #PHASE 3 ACTIONS
     def ChooseAttack(self, menuManager:MenuManager, player:Player,):
         """Called when a player chooses an attack. When this method is the menu managers choice function,
-        the options will be filled with the player's attack
+        the options will be filled with the player's attack. It also clears the player's undo actions to prevent
+        going back to previous turns
 
         Args:
             menuManager (MenuManager): _description_
             player (Player): _description_
         """        
-        self.playerSelectedAttack = menuManager.menuOptions[menuManager.menuChoice]
-        menuManager.ResetSelectFunctionAndParams()
         
+        self.playerSelectedAttack = menuManager.menuOptions[menuManager.menuChoice]
+        
+        menuManager.ResetSelectFunctionAndParams()
+        #Prevents bugs with undoing actions
+        menuManager.ClearStoredMenuPhases()
+
         #Runs the attack and sets sprites to run
+        #See EndPlayerTurn and how it is implemented in update for more details on why this code works
         self.HandleAttack(player, self.playerSelectedTarget, player.AttackTarget(self.playerSelectedTarget, self.playerSelectedAttack))
         player.SetSprites(player.attackSprites)
         self.playerSelectedTarget.SetSprites(player.hurtSprites)
         self.EndPlayerTurn(menuManager)
+
+        
 
         
         

@@ -105,6 +105,10 @@ class MenuManagerDraw:
                 screen.blit("menu_button", (70, 720 + ((i-self.attachedMenuManager.menuPage*3)*100)))
                 screen.draw.textbox(str(choiceList[i]), (70, 720 + ((i-self.attachedMenuManager.menuPage*3)*100), 160, 60))
 
+    def DrawMenuArrows(self):
+        self.attachedMenuManager.leftArrow.draw()
+        self.attachedMenuManager.rightArrow.draw()
+
 class InventoryManagerDraw:
     def __init__(self, inventoryManager = ""):
         self.attachedInventoryManager = inventoryManager
@@ -123,6 +127,8 @@ class InventoryManagerDraw:
         for actor in self.attachedInventoryManager.drawList:
             actor.draw()
             actor.scale = actor.scale
+
+        
 
 
     def DrawInventoryHeaders(self):
@@ -216,9 +222,6 @@ class GameManagerDraw:
 
 
 
-#This method is used by MenuOption objects for the player's menu selects
-def GivePlayerItem(itemName:str, player:Player, gameManager:GameManager, quantity):
-    player.AddItemToInventoryAndInitialize(gameManager.CreateGameItemObj(itemName), quantity)
 
 
 
@@ -245,9 +248,6 @@ townManager = TownManager(gameManager, combatManager, menuManager, shopMenuManag
 
 
 
-receiveGildedCutlass = MenuOption("Gilded Cutlassp", GivePlayerItem, ["Gilded Cutlass", player1, gameManager, 1] )
-receivePaladinsPlatemail = MenuOption("Paladin's Platemale", GivePlayerItem, ["Paladin's Platemail", player1, gameManager, 1])
-receive50Gold = MenuOption("50 Gold", player1.SetGoldAndDisplayGold, [player1.GetGold() + 50] )
 
 
 
@@ -269,11 +269,7 @@ keysPressed = []
 
 
 
-GivePlayerItem("Paladin's Platemail", player1, gameManager, 1)
-GivePlayerItem("Gilded Cutlass", player1, gameManager, 1)
-GivePlayerItem("Health Potion", player1, gameManager, 5)
-GivePlayerItem("Voodoo Pin", player1, gameManager, 2)
-#TODO: Streamline background code. Should be the first thing drawn in all scenes
+
 def draw():
     global mousePOS
     screen.clear()
@@ -296,6 +292,7 @@ def draw():
     else:
         backPack.draw()
         gameDraw.DrawGoldUI(player1)
+        gameManager.saveButton.draw()
      
     if gameManager.gameState == 1:
         pass
@@ -312,6 +309,7 @@ def draw():
             combatDraw.DrawVictoryRewards(combatManager)
     if menuManager.showMenu:
         menuDraw.DrawMenuOptions(menuManager.menuOptions)
+        menuDraw.DrawMenuArrows()
 
 
     #Draws all of the inventory assets to the screen when it is enabled
@@ -328,7 +326,7 @@ turnStarted = False
 def update():
     global turnStarted
     gameManager.UpdateDisplayGold(player1)
-
+    
 
     combatDraw.AnimateUnits(combatManager)
     for unit in combatManager.activeUnitList:
@@ -380,7 +378,7 @@ def update():
                 #Re-enables player action menu and sets it back to first menu
                 menuManager.showMenu = True
                 combatManager.CheckPlayerAvailableActions(player1) 
-                combatManager.initCombatMenuOptions(menuManager, player1, False)
+                combatManager.InitCombatMenuOptions(menuManager, player1, False)
 
         #This condition is always true during the enemy turn
         if combatManager.enemyTurn == True:
@@ -442,6 +440,8 @@ def update():
 
         if combatManager.victoryScreen.pos == (0 + images.combat_complete.get_width()/2, 0 + images.combat_complete.get_height()/2) and combatManager.victoryScreenAnimationComplete == False:
             sounds.chain_pulley.stop()
+            #This activates the menu and sets it options after victory
+            combatManager.InitVictoryMenuOptions(menuManager, gameManager, townManager, player1, False)
             player1.SetGold(player1.GetGold() + combatManager.combatGoldReward)
             combatManager.CompleteVictoryAnimation()
 
@@ -476,7 +476,11 @@ def on_mouse_down(pos, button):
                 gameManager.activeMenus[0].CloseMenu(gameManager)
 
             
-
+    elif menuManager.showMenu == True:
+        if button == mouse.LEFT:
+            #This runs the exact same code as when enter is pressed with a menu option
+            if menuManager.CheckMouseCollision(pos) != -1:
+                menuManager.ChooseOption()
     
 
 
@@ -489,6 +493,11 @@ def on_mouse_down(pos, button):
 
     elif backPack.obb_collidepoint(pos[0], pos[1]) and inventoryManager.showMenu == True:
         inventoryManager.CloseMenu(gameManager)
+
+    
+    if gameManager.saveButton.obb_collidepoint(pos[0], pos[1]):
+        gameManager.SaveGame(player1)
+
 
 
 
@@ -515,6 +524,7 @@ def on_key_down(key):
         if key == keys.ESCAPE:
             gameManager.activeMenus[0].CloseMenu(gameManager)
             return
+
             
 
 
@@ -535,36 +545,23 @@ def on_key_down(key):
         if key == keys.A:
             if menuManager.menuPage > 0:
 
-                #Goes 1 page down and resets the menu choice to the top of the next page
-                menuManager.menuPage -= 1
-                menuManager.menuChoice = menuManager.menuPage*3
-                #Resets select hover to the top of the menu
-                menuManager.selectAction.center = (150, 750)
+                menuManager.MoveMenuPageLeft()
         
         if key == keys.D:
             #This makes sure the player cannot go to a page that doesn't exist
             if menuManager.menuPage < (len(menuManager.menuOptions)-1) // 3:
 
-                #goes 1 page up and resets the menu choice to the top of the next page
-                menuManager.menuPage += 1
-                menuManager.menuChoice = menuManager.menuPage*3
-
-                #Reset select hover to the top of the menu
-                menuManager.selectAction.center = (150, 750)
+                menuManager.MoveMenuPageRight()
         
         if key == keys.RETURN:
-            
-            #Running both of these in the same key press causes issues related to the menu option changing the list and messing
-            #with the desired output of the RunSelectFunction
-            menuManager.ResetMenuOnChoice()
-            if type(menuManager.menuOptions[menuManager.menuChoice]) == MenuOption:
-                menuManager.menuOptions[menuManager.menuChoice].RunFunction()
-            menuManager.RunSelectFunction()
+            menuManager.ChooseOption()
 
-            #Any changes made to the menu options or selectFunction made by the lines above are delayed until after they have all run, at which
-            #point they update
-            menuManager.RefreshMenuOptions()
-            menuManager.RefreshSelectFunctionAndParams()
+        #Some menu actins can be undone to go back to the previous menu. This conditional enables that
+        if key == keys.ESCAPE:
+            if len(menuManager.previousMenuPhases) > 0:
+                menuManager.UndoMenuChoice()
+                menuManager.ResetMenuOnChoice()
+                menuManager.CheckPageArrowsActive()
             
 
             
@@ -572,31 +569,11 @@ def on_key_down(key):
     if gameManager.gameState == 0:
         if key == keys.SPACE:
             if gameManager.showTitleScreen == True:
-                menuManager.menuOptions = [receiveGildedCutlass, receivePaladinsPlatemail, receive50Gold]
+                menuManager.menuOptions = [MenuOption("New Game", gameManager.GoToSaveSelectFromNewSave, (menuManager, townManager, player1)), MenuOption("Load Game", gameManager.GoToSaveSelectFromLoadSave, (menuManager, townManager, player1))]
                 gameManager.showTitleScreen = False
                 menuManager.showMenu = True
-                menuManager.SetSelectFunctionAndParams(gameManager.CloseTitleScreenInitTown, [menuManager, townManager])
 
-        
-                
-    elif gameManager.gameState == 2:
-        if combatManager.playerTurn == True and inventoryManager.showMenu == False:
-            if key == keys.ESCAPE:
-                if combatManager.turnPhase == 1:
-                    combatManager.initCombatMenuOptions(menuManager, player1)
-                    combatManager.turnPhase -= 1
-                    combatManager.playerSelectedAction = None
-                    menuManager.ResetMenuOnChoice()
-
-                if combatManager.turnPhase == 2:
-                    menuManager.menuOptions = combatManager.activeEnemyList
-                    combatManager.turnPhase -= 1
-                    combatManager.playerSelectedTarget = None
-                    menuManager.ResetMenuOnChoice()
-                    
-
-                        
-
+   
     if gameManager.gameState == 3:
         if key == keys.SPACE:
             #gameManager.gameState = 2
@@ -613,6 +590,9 @@ def on_mouse_move(pos):
 
     if len(gameManager.activeMenus) > 0:
         gameManager.activeMenus[0].CheckMouseCollisionAndSetMenuPosition(pos)
+
+    elif menuManager.showMenu == True:
+        menuManager.CheckMouseCollisionAndSetMenuPosition(pos)
         
 
 
