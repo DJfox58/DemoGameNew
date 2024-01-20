@@ -21,10 +21,15 @@ class InventoryManager(ItemMenuManager):
         self.SetMenuOrder(player.inventory)
         gameManager.activeMenus.insert(0, self)
 
+
+    #All children of ItemMenuManager need these methods but they dont need to do anything
     def RunMethods(self, player):
         pass
 
     def RunMouseDownMethods(self, player, pos, gameManager):
+        pass
+
+    def RunKeyDownMethods(self, player, gameManager):
         pass
     
 

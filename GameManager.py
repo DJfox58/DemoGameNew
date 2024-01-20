@@ -60,6 +60,10 @@ class GameManager:
         """A player selecting a new save will have this variable be true and given a few extra starting items
         """        
 
+        self.showTutorialMessage = False
+        """Represents when the player is viewing the tutorial
+        """        
+
     def UpdateDisplayGold(self, player):
         """This method is called every update to check if the player's display gold needs to be updated
         When the player receives gold, their display gold is not updated at the same time. This is to add
@@ -312,7 +316,7 @@ class GameManager:
         self.gameState = 3
 
     def InitCombat(self, combatManager, menuManager, player1):
-        combatManager.InitializeCombat(2, player1, menuManager, True)
+        combatManager.InitializeCombat(5, player1, menuManager, True)
         menuManager.menuChoice = 0
         menuManager.showMenu = True
         self.SetBackground(2)

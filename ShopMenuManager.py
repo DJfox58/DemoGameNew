@@ -5,6 +5,7 @@ from ItemMenuManager import ItemMenuManager
 from GameManager import GameManager
 from GameItems import *
 from Player import Player
+from pygame import key
 
 class ShopMenuManager(ItemMenuManager):
     """A child class of the item menu class that is used specifically for shops.
@@ -27,6 +28,11 @@ class ShopMenuManager(ItemMenuManager):
         self.shopStock.append(item)
 
     def InitShopStockOnStart(self, gameManager):
+        """Creates the shop's stock at the start of the game
+
+        Args:
+            gameManager (_GameManager_): main GameM obj
+        """        
         self.AddItemToStock(gameManager.CreateGameItemObj("Health Potion", 5))
         self.AddItemToStock(gameManager.CreateGameItemObj("Voodoo Pin", 2))
         self.AddItemToStock(gameManager.CreateGameItemObj("Gilded Cutlass", 1))
@@ -52,13 +58,21 @@ class ShopMenuManager(ItemMenuManager):
 
 
     def PurchaseItem(self, player:Player, itemObj, gameManager):
+        """Purchases an item from the shop, adding it to the player and reducing their gold as well as the shop's total stock.
+        The method performs the necessary checks to see if the player already has the item in their inventory and will not create an entirely new item entry, instead just
+        adding to its quantity
+
+        Args:
+            player (Player): _description_
+            itemObj (_type_): _description_
+            gameManager (_type_): _description_
+        """        
         itemFound = False
         for invObj in player.inventory:
             if itemObj.name == invObj.name:
                 print(len(player.inventory))
                 player.AddItemToInventory(gameManager.CreateGameItemObj(itemObj.name), 1)
                 print(len(player.inventory))
-                print("ALREADY HAVE WOWOOWOWOW")
                 itemFound = True
                 break
         if itemFound == False:
@@ -71,6 +85,11 @@ class ShopMenuManager(ItemMenuManager):
 
 
     def LowerItemQuantity(self, itemObj):
+        """Reduces the quantity of an item in the shop by 1. If it's quantity becomes 0, removes the item from shop
+
+        Args:
+            itemObj (_type_): _description_
+        """        
         itemObj.quantity -= 1
         if itemObj.quantity == 0:
             if self.menuChoice == len(self.curMenuOrder) - 1:
@@ -91,16 +110,29 @@ class ShopMenuManager(ItemMenuManager):
             self.SetMenuOrder(self.shopStock)
             gameManager.activeMenus.insert(0, self)
 
+
+
+
     def RunMethods(self, player):
+        """Constantly checks if the item the player is hovering over can be purchased
+
+        Args:
+            player (_type_): _description_
+        """        
         self.CheckPurchasable(player)
 
 
 
+    #Both these methods involve adding mouse + keyboard functionality to buy items
     def RunMouseDownMethods(self, player, pos, gameManager):
         if self.purchaseButton.collidepoint(pos[0], pos[1]):
             if self.itemPurchasable:
-                print(self.curMenuOrder[self.menuChoice].quantity, "QUANTITIOWJT")
                 self.PurchaseItem(player, self.curMenuOrder[self.menuChoice], gameManager)
+
+    def RunKeyDownMethods(self, player, gameManager):
+        if self.itemPurchasable:
+            self.PurchaseItem(player, self.curMenuOrder[self.menuChoice], gameManager)
+
 
 
         

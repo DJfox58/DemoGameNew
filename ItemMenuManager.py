@@ -240,6 +240,10 @@ class ItemMenuManager:
         else:
             self.menuEmpty = False
 
+
+
+    #The following methods are used to implement specific player interactivity functionality to the specific classes. 
+    #View the classes implementation of the methods called in these methods for a full understanding of the unique functionality of the classes
     def RunClassSpecificMethods(self, player = None):
         """Child classes should implement this to run menu specific methods in update()
         """
@@ -248,6 +252,9 @@ class ItemMenuManager:
 
     def RunClassSpecificMouseDownMethods(self, player, pos, gameManager):
         self.RunMouseDownMethods(player, pos, gameManager)
+
+    def RunClassSpecificKeyDownMethods(self, player, gameManager):
+        self.RunKeyDownMethods(player, gameManager)
           
 
     def AttachMenuDraw(self, menuDrawObject):

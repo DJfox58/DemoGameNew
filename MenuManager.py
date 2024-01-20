@@ -122,12 +122,17 @@ class MenuManager:
         self.selectAction.center = (150, 750 + (100 * self.menuChoice))
 
     def MoveMenuPageRight(self):
+        """Moves the action menu one page right and updates menu variables to reflect this.
+        The menu tries to keep the same position but will go for the next highest if there is no menu choice
+        in the previous position on the next page
+        """        
         oldVal = self.menuChoice
         self.menuChoice += 3
 
+        #This condition happens when the new menuChoice doesn't exist
+        #choice and position and changed to the next highest menu choice
         if self.menuChoice > len(self.menuOptions) - 1:
             self.menuChoice = len(self.menuOptions) - 1
-            print(self.menuChoice - oldVal, "THIS IS POS")
             self.menuPosition = self.menuChoice % 3
         self.menuPage += 1
         self.CheckPageArrowsActive()
@@ -135,6 +140,8 @@ class MenuManager:
         self.selectAction.center = (150, 750 + (self.menuPosition * 100))
 
     def MoveMenuPageLeft(self):
+        """Moves the action menu one page left and updates menu variables to reflect this
+        """        
         self.menuChoice -= 3
         self.menuPage -= 1
         self.CheckPageArrowsActive()

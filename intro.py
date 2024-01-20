@@ -127,8 +127,15 @@ class InventoryManagerDraw:
         for actor in self.attachedInventoryManager.drawList:
             actor.draw()
             actor.scale = actor.scale
+        if self.attachedInventoryManager.menuName == "Shop":
+            if self.attachedInventoryManager.itemPurchasable:
+                screen.draw.text("Buy", center = (1020, 498), color = "white", fontname = "old_englished_boots", fontsize = 45)
+            else:
+                screen.draw.text("Buy", center = (1020, 498), color = "black", fontname = "old_englished_boots", fontsize = 45)
 
-        
+
+
+
 
 
     def DrawInventoryHeaders(self):
@@ -274,7 +281,7 @@ def draw():
     global mousePOS
     screen.clear()
     screen.blit(gameManager.backgrounds[gameManager.curBackground], (0, 0))
-    screen.draw.text("Transparency", (400, 400), alpha = 0.5, color = (0, 255, 0))
+    #screen.draw.text("Transparency", (400, 400), alpha = 0.5, color = (0, 255, 0))
 
 
 
@@ -287,12 +294,20 @@ def draw():
         if gameManager.showTitleScreen:
             screen.blit("press_space_black", (640 - (images.press_space_black.get_width()/2), 800 - (images.press_space_black.get_height()/2)))
 
+            if gameManager.showTutorialMessage:
+                screen.blit("tutorial_message", (0, 0))
+                screen.draw.text("Press ESCAPE to leave tutorial", (30, 20), color = "black", fontname = "old_englished_boots", fontsize = 60)
+
+            else:
+                screen.draw.text("Press t to view tutorial", center = (640, 680), color = "black", fontname = "old_englished_boots", fontsize = 60)
+
 
     #These elements should be drawn in every game state except the title screen
     else:
         backPack.draw()
         gameDraw.DrawGoldUI(player1)
         gameManager.saveButton.draw()
+        screen.draw.text("Save", center = (1205, 37), color = "white", fontname = "old_englished_boots", fontsize = 45)
      
     if gameManager.gameState == 1:
         pass
@@ -481,6 +496,13 @@ def on_mouse_down(pos, button):
             #This runs the exact same code as when enter is pressed with a menu option
             if menuManager.CheckMouseCollision(pos) != -1:
                 menuManager.ChooseOption()
+
+
+            #Detects if the mouse has pressed on an active menu arrow to go to another menu page
+            elif menuManager.leftArrow.obb_collidepoint(pos[0], pos[1]) and menuManager.arrowsActive[0] == 1:
+                menuManager.MoveMenuPageLeft()
+            elif menuManager.rightArrow.obb_collidepoint(pos[0], pos[1]) and menuManager.arrowsActive[1] == 1:
+                menuManager.MoveMenuPageRight()
     
 
 
@@ -524,6 +546,8 @@ def on_key_down(key):
         if key == keys.ESCAPE:
             gameManager.activeMenus[0].CloseMenu(gameManager)
             return
+        if key == keys.RETURN:
+            gameManager.activeMenus[0].RunClassSpecificKeyDownMethods(player1, gameManager)
 
             
 
@@ -567,11 +591,17 @@ def on_key_down(key):
             
         
     if gameManager.gameState == 0:
-        if key == keys.SPACE:
+        if key == keys.SPACE and gameManager.showTutorialMessage == False:
             if gameManager.showTitleScreen == True:
                 menuManager.menuOptions = [MenuOption("New Game", gameManager.GoToSaveSelectFromNewSave, (menuManager, townManager, player1)), MenuOption("Load Game", gameManager.GoToSaveSelectFromLoadSave, (menuManager, townManager, player1))]
                 gameManager.showTitleScreen = False
                 menuManager.showMenu = True
+        
+        if key == keys.T:
+            gameManager.showTutorialMessage = True
+
+        if key == keys.ESCAPE:
+            gameManager.showTutorialMessage = False
 
    
     if gameManager.gameState == 3:
