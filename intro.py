@@ -75,11 +75,22 @@ class CombatManagerDraw:
 
 
     def AnimateUnits(self, combatManager):
+        """Moves any unit in the activeUnitList to their next sprite in their animation.
+        It also sets their scale to avoid weird scale issues when animating
+
+        Args:
+            combatManager (_CombatManager_): main CombatM obj
+        """        
         for unit in combatManager.activeUnitList:
             unit.actor.animate()
-            unit.actor.scale = unit.actor.scale\
+            unit.actor.scale = unit.actor.scale
             
     def DrawVictoryRewards(self, combatManager):
+        """Draws the victory rewards onto the victory screen sprite
+
+        Args:
+            combatManager (_CombatManager): main CombatM object
+        """        
         combatManager.victoryCoin.draw()
         screen.draw.text("+" + str(combatManager.combatGoldReward), midleft = (350, 440), color = "black", fontname = "old_englished_boots", fontsize = 50)
 
@@ -182,6 +193,8 @@ class InventoryManagerDraw:
 
 
     def DrawSelectedItemDescription(self):
+        """Draws the extended description for whatever item the player is hovering in an item menu
+        """        
         #If the menu is empty then no item can be selected
         if self.attachedInventoryManager.menuEmpty == False:
             selectedItem = self.attachedInventoryManager.curMenuOrder[self.attachedInventoryManager.menuChoice]
@@ -265,8 +278,6 @@ townManager = TownManager(gameManager, combatManager, menuManager, shopMenuManag
 player1.AddAttack(combatManager.attackDict["Searing Slash"])
 player1.AddAttack(combatManager.attackDict["Crippling Blow"])
 player1.AddAttack(combatManager.attackDict["Miasma"])
-
-
 backPack = Actor("closed_backpack", (100, 80), anchor = ("right", "bottom"))
 backPack.scale = 4
 
@@ -294,6 +305,8 @@ def draw():
         if gameManager.showTitleScreen:
             screen.blit("press_space_black", (640 - (images.press_space_black.get_width()/2), 800 - (images.press_space_black.get_height()/2)))
 
+
+            #Jank quick implentation of the menu screen (If you are Mr. Cordiner viewing this, this code is actually very optimal and allows for concicse tutorial implementation :) 
             if gameManager.showTutorialMessage:
                 screen.blit("tutorial_message", (0, 0))
                 screen.draw.text("Press ESCAPE to leave tutorial", (30, 20), color = "black", fontname = "old_englished_boots", fontsize = 60)
@@ -303,6 +316,7 @@ def draw():
 
 
     #These elements should be drawn in every game state except the title screen
+    #They are all default ui elements that should be available to the player during gameplay
     else:
         backPack.draw()
         gameDraw.DrawGoldUI(player1)
@@ -315,19 +329,26 @@ def draw():
     if gameManager.gameState == 2:
         combatDraw.DrawUnits(combatManager)
 
+
     if gameManager.gameState == 3:
         combatManager.victoryScreen.draw()
         combatDraw.DrawUnits(combatManager)
+
+        #This condition is during the victory chain animation
         if combatManager.initVictoryScreen == True:
             pass
+
+        #This is after the victory screen has completed its animation
         if combatManager.victoryScreenAnimationComplete:
             combatDraw.DrawVictoryRewards(combatManager)
+
     if menuManager.showMenu:
         menuDraw.DrawMenuOptions(menuManager.menuOptions)
         menuDraw.DrawMenuArrows()
 
 
     #Draws all of the inventory assets to the screen when it is enabled
+    #Only draws the most active menu to save on draw calls
     if len(gameManager.activeMenus) > 0:
         gameManager.activeMenus[0].attachedDraw.DrawWholeMenu()
 
@@ -343,7 +364,11 @@ def update():
     gameManager.UpdateDisplayGold(player1)
     
 
+    #This doesn't need to be behind a game state conditional as it will only animate sprites that are on screen.
+    #if there are none, it will do nothing
     combatDraw.AnimateUnits(combatManager)
+
+
     for unit in combatManager.activeUnitList:
         gameManager.resetUnitToIdleSprite(unit)
 
@@ -430,8 +455,7 @@ def update():
 
 
                     #The enemy begins moving back to their position after their attack
-                    animate(curEnemy.actor, pos=(900, 400 + (100 * combatManager.curEnemyTurnInd)))
-                
+                    animate(curEnemy.actor, pos=(900, 450 + (100 * combatManager.curEnemyTurnInd)))
                     combatManager.curEnemyTurnInd += 1
 
         #Changes to victory screen if all enemies have died

@@ -55,21 +55,30 @@ class CombatManager:
 
 
         
-        self.enemyActorDict = {"fire_enemy_1": [["fire_enemy_1", "fire_enemy_2", "fire_enemy_3", "fire_enemy_4", "end"], ["test_atk1", "test_atk2", "test_atk3", "test_atk4", "test_atk5", "test_atk6", "test_atk7", "test_atk8", "end", [0, 0]], 0.4]}
+        self.enemyActorDict = {"fire_enemy_1": [["fire_enemy_1", "fire_enemy_2", "fire_enemy_3", "fire_enemy_4", "end"], ["test_atk1", "test_atk2", "test_atk3", "test_atk4", "test_atk5", "test_atk6", "test_atk7", "test_atk8", "end", [0, 0]], ["golem_hurt_0", "golem_hurt_1", "golem_hurt_2", "golem_hurt_3", "golem_hurt_4", "golem_hurt_5", "golem_hurt_6", "golem_hurt_7", "golem_hurt_8", "golem_hurt_9", "golem_hurt_10", "golem_hurt_11", "end", [0, 0]], [1, 6, False]]}
         """Contains the sprite information for all enemies. Includes: default sprites, attack sprites, and sprite scale
-        """        
+        """       
+        self.enemyActorDict["golem_idle_0"] = [["golem_idle_0", "golem_idle_1", "golem_idle_2", "golem_idle_3", "golem_idle_4", "golem_idle_5", "golem_idle_6", "golem_idle_7", "golem_idle_8", "golem_idle_9", "golem_idle_10", "golem_idle_11"], ["golem_attacking_0", "golem_attacking_1", "golem_attacking_2", "golem_attacking_3", "golem_attacking_4", "golem_attacking_5", "golem_attacking_6", "golem_attacking_7", "golem_attacking_8", "golem_attacking_9", "golem_attacking_10", "golem_attacking_11", "end", [0, 0]], ["golem_hurt_0", "golem_hurt_1", "golem_hurt_2", "golem_hurt_3", "golem_hurt_4", "golem_hurt_5", "golem_hurt_6", "golem_hurt_7", "golem_hurt_8", "golem_hurt_9", "golem_hurt_10", "golem_hurt_11", "end", [0, 0]], [0.2, 11, True]]
+        self.enemyActorDict["slime_idle_0"] = [["slime_idle_0", "slime_idle_1", "slime_idle_2", "slime_idle_3", "slime_idle_4", "slime_idle_5", "slime_idle_6", "slime_idle_7"], ["slime_attack_0", "slime_attack_1", "slime_attack_2", "slime_attack_3", "end", [0, 0]], ["slime_hurt_0", "slime_hurt_1", "slime_hurt_2", "slime_hurt_3", "slime_hurt_4", "slime_hurt_5", "end", [0, 0]], [1, 6, True]]
 
         self.attackDict = { "Corrosive Spit" : Attack("Corrosive Spit", 3, 0.4), "Swipe" : Attack("Swipe", 5, 1, wounded = ["wounded", 1, 2])}
+        """Holds all the attacks available in the game (some are only for the player and some are only for enemies)
+        """        
         self.attackDict["Searing Slash"] = (Attack("Searing Slash", 5, 1, wounded = ["wounded", 0.5, 2]))
         self.attackDict["Crippling Blow"] = (Attack("Crippling Blow", 6, 0.5, weakened = ["weakened", 1, 3]))
         self.attackDict["Miasma"] = (Attack("Miasma", 0, 0, wounded = ["wounded", 1, 3], weakened = ["weakened", 1, 3]))
 
-        self.enemyDict = {"Ogre" : Enemy("Ogre", 30, 5, 1, "fire_enemy_1"), "Direwolf" : Enemy("Direwolf", 10, 3, 10, "fire_enemy_1"), "Slime" : Enemy("Slime", 5, 2, 3, "fire_enemy_1")}
+        self.enemyDict = {"Efrit" : Enemy("Efrit", 10, 3, 10, "fire_enemy_1"), "Slime" : Enemy("Slime", 5, 2, 3, "slime_idle_0")}
         """Contains a copy of all enemies in the game. Enemies can be cloned from this list to become
         active enemies. This list is FINAL and should never be modified."""  
-        self.enemyDict["Ogre"].attackList.append(self.attackDict["Swipe"])
+        self.enemyDict["Golem"] = Enemy("Golem", 40, 1, 1, "golem_idle_0")
+        
+        #self.enemyDict["Ogre"] = Enemy("Ogre", 30, 5, 1, "fire_enemy_1")
+
+        #self.enemyDict["Ogre"].attackList.append(self.attackDict["Swipe"])
         self.enemyDict["Slime"].attackList.append(self.attackDict["Corrosive Spit"])
-        self.enemyDict["Direwolf"].attackList.append(self.attackDict["Swipe"])
+        self.enemyDict["Efrit"].attackList.append(self.attackDict["Swipe"])
+        self.enemyDict["Golem"].attackList.append(self.attackDict["Swipe"])
 
 
         self.enemyNameList = []
@@ -119,24 +128,30 @@ class CombatManager:
         self.victoryScreenAnimationComplete = True
 
     def CreateEnemyObj(self, enemyName):
-        """Creates a deep copy of the requested enemy
+        """Creates a deep copy of the requested enemy and initializes it using the enemyActorDict.
 
         Args:
             enemyName (_str_): The name of the enemy you want to clone
-
+f
         Returns:
             _Enemy_: The requested enemy object
         """        
         enemyCopy = copy.deepcopy(self.enemyDict[enemyName])
         key = enemyCopy.actor
-        enemyCopy.actor = Actor(self.enemyActorDict[key][0][0],  scale=self.enemyActorDict[key][2], midbottom = (800, 600), anchor = ("center", "bottom"))
+        enemyCopy.actor = Actor(self.enemyActorDict[key][0][0], midbottom = (800, 600), anchor = ("center", "bottom"))
         enemyCopy.actor.images = self.enemyActorDict[key][0]
         enemyCopy.idleSprites = self.enemyActorDict[key][0]
 
         #The last value stores the attackSpriteOffset and therefore should not be included in the sprite set as it would create an error
         enemyCopy.attackSprites = self.enemyActorDict[key][1][:-1]
         enemyCopy.attackOffset = self.enemyActorDict[key][1][-1]
-        enemyCopy.actor.fps = 6
+        enemyCopy.hurtSprites = self.enemyActorDict[key][2][:-1]
+        enemyCopy.hurtOffset = self.enemyActorDict[key][1][-1]
+
+        enemyCopy.actor.fps = self.enemyActorDict[key][-1][1]
+        enemyCopy.actor.flip_x = self.enemyActorDict[key][-1][2]
+        scale = self.enemyActorDict[key][-1][0]
+        enemyCopy.actor.scale = scale
         return enemyCopy
 
 
@@ -147,7 +162,7 @@ class CombatManager:
         Args:
             enemyObj (_Enemy_): the enemy object being added to combat
         """        
-        enemyObj.actor.midbottom = (900, 400 + (len(self.activeEnemyList)*100))
+        enemyObj.actor.midbottom = (900, 450 + (len(self.activeEnemyList)*100))
         self.activeEnemyList.append(enemyObj)
         self.activeUnitList.append(enemyObj)
 
@@ -469,7 +484,7 @@ class CombatManager:
         #See EndPlayerTurn and how it is implemented in update for more details on why this code works
         self.HandleAttack(player, self.playerSelectedTarget, player.AttackTarget(self.playerSelectedTarget, self.playerSelectedAttack))
         player.SetSprites(player.attackSprites)
-        self.playerSelectedTarget.SetSprites(player.hurtSprites)
+        self.playerSelectedTarget.SetSprites(self.playerSelectedTarget.hurtSprites)
         self.EndPlayerTurn(menuManager)
 
         
