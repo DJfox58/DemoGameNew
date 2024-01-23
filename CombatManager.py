@@ -294,7 +294,6 @@ f
             player (Player): player
             delayed (bool): if true. This method puts the combat options in the delayed update list for options. If false it adds it normally
         """            
-        print("HES A RUNNER HES AT RACKSTAR") 
         actionList = [MenuOption("Fight", self.ChooseFightAction, (menuManager, player))]
         actionList.append(MenuOption("Item", self.ChooseItemAction, (menuManager, player)))
 
@@ -372,7 +371,7 @@ f
         NOTE: This method DOES NOT give the rewards to the player. The method that does that
         is GivePlayerCombatRewards
         """        
-        self.combatGoldReward = random.randint(5, 15)
+        self.combatGoldReward = random.randint(10, 20)
         if random.randint(1, 3) == 3:
             pass
             #give special reward or smth
@@ -439,7 +438,6 @@ f
             menuManager (MenuManager): menu manager
             player (Player): player
         """               
-        print(menuManager.menuChoice, "CHOICE CHOICE")
         menuManager.StoreMenuPhaseVariables()
         self.playerSelectedTarget = menuManager.menuOptions[menuManager.menuChoice]
         menuManager.newMenuOptions = player.attackList

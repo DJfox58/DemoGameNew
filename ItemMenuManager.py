@@ -399,7 +399,7 @@ class ItemMenuManager:
         """Used by scrol wheel to bring the menu up while keeping the selected item in the same menu position (new item though)
         """     
         if self.menuOffset < len(self.curMenuOrder) - 5:
-            print(self.menuChoice)   
+            #(self.menuChoice)   
             self.menuOffset += 1
             self.menuChoice += 1
 
@@ -407,8 +407,7 @@ class ItemMenuManager:
         """Used by scroll wheel to bring the menu down while keeping the selected item in the same menu position (new item though)
         """      
         if self.menuOffset > 0:  
-            print(self.menuChoice)
-            print(self.menuChoice)
+            #print(self.menuChoice)
             self.menuOffset -= 1
             self.menuChoice -= 1
     #--------------------

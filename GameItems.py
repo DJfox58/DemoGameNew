@@ -1,4 +1,3 @@
-print("WEEBLE")
 class ItemTemplate:
     """This class is at the top of the item inheritance hierarchy. It contains properties and 
     methods that are implemented by all items

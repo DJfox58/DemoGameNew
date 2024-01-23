@@ -54,6 +54,9 @@ class ShopMenuManager(ItemMenuManager):
             else:
                 self.itemPurchasable = False
                 self.purchaseButton.image = "purchase_button_pressed"
+        else:
+            self.itemPurchasable = False
+            self.purchaseButton.image = "purchase_button_pressed"
 
 
 
@@ -70,9 +73,9 @@ class ShopMenuManager(ItemMenuManager):
         itemFound = False
         for invObj in player.inventory:
             if itemObj.name == invObj.name:
-                print(len(player.inventory))
+                #print(len(player.inventory))
                 player.AddItemToInventory(gameManager.CreateGameItemObj(itemObj.name), 1)
-                print(len(player.inventory))
+                #print(len(player.inventory))
                 itemFound = True
                 break
         if itemFound == False:

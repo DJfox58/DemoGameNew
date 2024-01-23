@@ -1,5 +1,4 @@
-60
-Paladin's Platemail+1
+5
+Health Potion+10
+Voodoo Pin+3
 Gilded Cutlass+1
-Health Potion+5
-Voodoo Pin+2

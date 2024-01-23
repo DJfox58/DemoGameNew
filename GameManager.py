@@ -137,7 +137,7 @@ class GameManager:
             random.shuffle(encounterList)
         
         encounters = [encounterList[random.randint(0, 1)], encounterList[random.randint(2, 3)]]
-        print(encounters)
+        #print(encounters)
 
     def SetBackground(self, backgroundIndex:int):
         """Changes the displayed background ingame. Typically used in gamestate changes but can theoretically
@@ -160,7 +160,7 @@ class GameManager:
 
         for item in player.inventory:
             stringFormat = item.name + "+" + str(item.quantity)
-            print(stringFormat)
+            #print(stringFormat)
             saveFile.write(stringFormat + "\n")
 
         saveFile.close()
@@ -180,7 +180,7 @@ class GameManager:
         for item in savedItems:
             vals = item.split("+")
             vals[1] = vals[1].strip("\n")
-            print(vals)
+            #print(vals)
             player.AddItemToInventoryAndInitialize(self.CreateGameItemObj(vals[0]), int(vals[1]))
 
 
@@ -209,7 +209,7 @@ class GameManager:
         """        
         receiveGildedCutlass = MenuOption("Gilded Cutlass", self.GivePlayerItem, ["Gilded Cutlass", player, 1] )
         receivePaladinsPlatemail = MenuOption("Paladin's Platemail", self.GivePlayerItem, ["Paladin's Platemail", player, 1])
-        receive50Gold = MenuOption("50 Gold", player.SetGoldAndDisplayGold, [player.GetGold() + 50] )
+        receive50Gold = MenuOption("30 Gold", player.SetGoldAndDisplayGold, [player.GetGold() + 30] )
         choiceList = [receiveGildedCutlass, receivePaladinsPlatemail, receive50Gold]
         if not delayed:
             menuManager.menuOptions = choiceList
@@ -229,7 +229,7 @@ class GameManager:
             player (_type_): _description_
         """        
         menuManager.SetSelectFunctionAndParamsLate(self.GoToItemSelectFromNewSave, [menuManager, townManager, player])
-        print(self.saveFiles)
+        #print(self.saveFiles)
         menuManager.newMenuOptions = self.saveFiles
         menuManager.StoreMenuPhaseVariables()
         self.newSave = True
@@ -303,6 +303,7 @@ class GameManager:
     def CloseCombat(self, combatManager, menuManager):
         combatManager.EndCombat()
         menuManager.CloseMenuAndResetPosition()
+        combatManager.activeUnitList.clear()
     
 
 
@@ -316,7 +317,7 @@ class GameManager:
         self.gameState = 3
 
     def InitCombat(self, combatManager, menuManager, player1):
-        combatManager.InitializeCombat(5, player1, menuManager, True)
+        combatManager.InitializeCombat(3, player1, menuManager, True)
         menuManager.menuChoice = 0
         menuManager.showMenu = True
         self.SetBackground(2)
@@ -355,6 +356,10 @@ class GameManager:
     def CloseVictoryScreenInitCombat(self, menuManager, combatManager, player):
         self.CloseVictoryScreen(menuManager, combatManager)
         self.InitCombat(combatManager, menuManager, player)
+
+    def CloseCombatInitTown(self, menuManager, combatManager, townManager):
+        self.CloseCombat(combatManager, menuManager)
+        self.InitTown(menuManager, townManager)
     #-----------------------------------------------------------------------
       
 #-------------------------------------------------------------------------------------

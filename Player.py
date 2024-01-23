@@ -107,7 +107,6 @@ class Player(Unit):
             #When the object is added, it's quantity should already be initialized
             itemObject.quantity = quantity
             self.inventory.append(itemObject)
-            print("WFJWEOFFE")
     
 
     def AddItemToItemDict(self, itemObject):

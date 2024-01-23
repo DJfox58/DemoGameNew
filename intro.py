@@ -94,7 +94,6 @@ class CombatManagerDraw:
         combatManager.victoryCoin.draw()
         screen.draw.text("+" + str(combatManager.combatGoldReward), midleft = (350, 440), color = "black", fontname = "old_englished_boots", fontsize = 50)
 
-
 class MenuManagerDraw:
     def __init__(self, menuManager = ""):
         self.attachedMenuManager = menuManager
@@ -325,7 +324,6 @@ def draw():
      
     if gameManager.gameState == 1:
         pass
-
     if gameManager.gameState == 2:
         combatDraw.DrawUnits(combatManager)
 
@@ -481,7 +479,6 @@ def update():
             sounds.chain_pulley.stop()
             #This activates the menu and sets it options after victory
             combatManager.InitVictoryMenuOptions(menuManager, gameManager, townManager, player1, False)
-            player1.SetGold(player1.GetGold() + combatManager.combatGoldReward)
             combatManager.CompleteVictoryAnimation()
 
         
@@ -495,7 +492,7 @@ def update():
 
 
 def on_mouse_down(pos, button):
-    print(pos)
+    #print(pos)
 
     if len(gameManager.activeMenus) > 0:
         gameManager.activeMenus[0].ChooseMenuSort(pos)
