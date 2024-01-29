@@ -14,8 +14,8 @@ class Player(Unit):
         
         #gold represents the player's actual amount of gold the player has
         #display gold is for UI elements to update the gold value incrementally rather than all at once
-        self.gold = 10
-        self.displayGold = 10
+        self.gold = 500
+        self.displayGold = self.gold
 
         self.inventory = []
         """
@@ -197,9 +197,29 @@ class Player(Unit):
         """        
         for i in range(len(self.inventory)):
             if self.inventory[i].quantity <= 0:
+                self.itemDict.pop(self.inventory[i].name)
                 self.inventory.pop(i)
                 self.InventoryCheck()
                 return
+            
+
+    def CheckForItemThenAdd(self, itemObj, gameManager):
+        """Adds an item and checks whether or not it needs to be initialized (if it's a new item)
+
+        Args:
+            itemObj (_GameItem_): the item being added
+            gameManager (_type_): main gameM class
+        """        
+        itemFound = False
+        for invObj in self.inventory:
+            if itemObj.name == invObj.name:
+                print("ITEM IS THERE")
+                self.AddItemToInventory(gameManager.CreateGameItemObj(itemObj.name), 1)
+                itemFound = True
+                return
+        if itemFound == False:
+            print("NOT THERE ITEM NOT THERE")
+            self.AddItemToInventoryAndInitialize(gameManager.CreateGameItemObj(itemObj.name), 1)
 
 
      

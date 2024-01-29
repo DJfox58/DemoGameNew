@@ -1,3 +1,5 @@
+#Inventory modules can be max size 300w 350h
+
 import pgzrun
 from pygame import Rect
 from pgzhelper import *
@@ -5,7 +7,7 @@ class ItemMenuManager:
     """This class is a parent class for the shop and inventory UI
     """    
     
-    def __init__(self, menuName):
+    def __init__(self, menuName, pageNames):
         self.menuChoice = 0
         """Starts at 0 on the first menu choice
         """
@@ -14,6 +16,9 @@ class ItemMenuManager:
         """What appears at the top of the menu
         """        
 
+        self.pageNames = pageNames
+        """Help clarify which page the player is currently on and what information it is displaying
+        """        
 
         self.menuPosition = 0
         """Can have int values between 0 and 4
@@ -26,7 +31,22 @@ class ItemMenuManager:
         The same goes in the opposite direction when going back up
 
         MAX menu OFFSET IS len(curmenuOrder) - 5
+        """  
+
+
+        self.menuPage = 0
+        """dictates which page the menu is displaying. This affects the items shown as well as menu
+        functionality in some case (ex. house has storage and inventory page)
         """        
+
+
+
+        self.pageOptions = []    
+        """All available page options
+        """        
+
+
+          
 
 
         self.showMenu = False
@@ -35,12 +55,14 @@ class ItemMenuManager:
         """   
 
         self.curMenuOrder = []
-        """Contains all the objects currently displayed in the menu
+        """Contains all the objects currently displayed in the current menu page
         """        
 
         self.attachedDraw = None
 
         self.menuEmpty = True
+        """Helps the edge case of an empty menu and prevents a crash
+        """        
 
 
         self.inventoryBackground = Actor("inventory_background", topleft = (140, 100))    
@@ -81,7 +103,7 @@ class ItemMenuManager:
         
         
 
-        self.drawList = [self.sortArrowIndicator]
+        self.drawList = []
         """any actors placed in this list will be drawn while the list is active
         """        
 
@@ -255,6 +277,8 @@ class ItemMenuManager:
 
     def RunClassSpecificKeyDownMethods(self, player, gameManager):
         self.RunKeyDownMethods(player, gameManager)
+
+    #-----------------------------
           
 
     def AttachMenuDraw(self, menuDrawObject):
@@ -302,16 +326,20 @@ class ItemMenuManager:
             Weight = 3
             Value = 4
         """        
-        self.headerDetected = -1000
+        headerDetected = -1000
         for i in range(4):
             if self.headerBoxes[i].collidepoint(pos[0], pos[1]):
-                self.headerDetected = i
+                headerDetected = i
                 return i + 1
             
-        #This return will always be -1
-        return self.headerDetected
+        
+            
+        return headerDetected
     
     def SetSortArrowIndicator(self):
+        """This method sets the position and orientation of the sort indicator arrow.
+        It should be used whenever the arrow is updated
+        """        
         if -4 <= self.curSort <= 4:
             self.sortArrowIndicator.midbottom = (self.headerBoxes[abs(self.curSort)-1].center[0], self.headerBoxes[abs(self.curSort)-1].top)
             if self.curSort < 0:
@@ -322,6 +350,8 @@ class ItemMenuManager:
 
     def ChooseMenuSort(self, pos):
         sortType = self.CheckMouseCollisionInvHeaders(pos)
+        if sortType == -1000:
+            return
         if sortType == 1:
             self.curMenuOrder = self.SortMenuAlphabetically(self.curMenuOrder, (sortType == self.curSort))
         elif sortType == 2:
@@ -373,6 +403,7 @@ class ItemMenuManager:
         self.menuChoice = 0
         self.menuOffset = 0
         self.menuPosition = 0
+        self.menuPage = 0
         self.inventoryItemSelect.midleft = (self.inventoryBackground.left + 100, self.inventoryBackground.top + 130)
 
         #Removes the menu from the active menus list
@@ -380,16 +411,23 @@ class ItemMenuManager:
             if menu == self:
                 gameManager.activeMenus.pop(gameManager.activeMenus.index(menu))
 
-    def OpenMenu(self, menuOptions, gameManager):
+    def OpenMenu(self, gameManager, pageOptions = []):
         """Performs the necessary steps to init the Menu for opening
 
         Args:
             player (_Player_): player object whose Menu is being viewed
         """        
         self.showMenu = True
-        self.SetMenuOrder(menuOptions)
+
+        self.SetMenuOrder(pageOptions[0])
         gameManager.activeMenus.insert(0, self)
+        self.pageOptions.clear()
+        for pageOption in pageOptions:
+            print(1)
+            self.pageOptions.append(pageOption)
         
+
+
 
 
     #THESE METHODS ARE FOR SCROLL WHEEL
@@ -452,9 +490,62 @@ class ItemMenuManager:
                 self.menuPosition -= 1
 
 
-    def LowerItemQuantity(self, itemObj):
-        itemObj.quantity -= 1
-        if itemObj.quantity == 0:
-            if self.menuChoice == len(self.curMenuOrder) - 1:
-                self.MoveChoiceUp()
-            self.curMenuOrder.pop(self.curMenuOrder.index(itemObj))
+    def MovePageUp(self):
+        """Moves to the next page of the menu. Resets menu position, choice, and offset
+        """        
+        if self.menuPage < len(self.pageOptions) - 1:
+            self.menuPage += 1
+            print(self.pageOptions, "MENUMNEWWEIF")
+            self.SetMenuOrder(self.pageOptions[self.menuPage])
+            self.menuOffset = 0
+            self.menuPosition = 0
+            self.menuChoice = 0
+            self.inventoryItemSelect.midleft = (self.inventoryBackground.left + 100, self.inventoryBackground.top + 130)
+            self.curSort = -1000
+            self.sortArrowIndicator.flip_y
+    def MovePageDown(self):
+        """Moves to the previous page of the menu. Resets menu position, choice, and offset
+        """        
+        if self.menuPage > 0:
+            self.menuPage -= 1
+            self.SetMenuOrder(self.pageOptions[self.menuPage])
+            self.menuOffset = 0
+            self.menuPosition = 0
+            self.menuChoice = 0
+            self.inventoryItemSelect.midleft = (self.inventoryBackground.left + 100, self.inventoryBackground.top + 130)
+            self.curSort = -1000
+            self.sortArrowIndicator.flip_y
+
+    def CheckForItemThenAdd(self, itemObj, gameManager, list):
+        """Adds an item and checks whether or not it needs to be initialized (if it's a new item)
+
+        Args:
+            itemObj (_GameItem_): the item being added
+            gameManager (_type_): main gameM class
+            list (_List_): The list the item is being added to
+        """        
+        itemFound = False
+        for invObj in list:
+            if itemObj.name == invObj.name:
+                invObj.quantity += 1
+                itemFound = True
+                return
+        if itemFound == False:
+            newItem = gameManager.CreateGameItemObj(itemObj.name)
+            newItem.quantity = 1
+            list.append(newItem)
+
+
+    def ListCheck(self, list):
+        """Loops through the player's inventory and removes items with no more quantity left.
+        Used to check when consumables have been used up.
+        Do not ask about the recursion, just accept that it works 
+        Args:
+            list (_List_): The list being checked for items with 0 quantity
+        """        
+        for i in range(len(list)):
+            if list[i].quantity <= 0:
+                list.pop(i)
+                self.ListCheck(list)
+                return
+            

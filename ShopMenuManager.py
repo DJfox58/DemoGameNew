@@ -12,7 +12,7 @@ class ShopMenuManager(ItemMenuManager):
     All shops are run out of a single instance of this class
     """    
     def __init__(self):
-        super().__init__("Shop")
+        super().__init__("Shop", [""])
 
         self.itemPurchasable = False
 
@@ -70,16 +70,7 @@ class ShopMenuManager(ItemMenuManager):
             itemObj (_type_): _description_
             gameManager (_type_): _description_
         """        
-        itemFound = False
-        for invObj in player.inventory:
-            if itemObj.name == invObj.name:
-                #print(len(player.inventory))
-                player.AddItemToInventory(gameManager.CreateGameItemObj(itemObj.name), 1)
-                #print(len(player.inventory))
-                itemFound = True
-                break
-        if itemFound == False:
-            player.AddItemToInventoryAndInitialize(gameManager.CreateGameItemObj(itemObj.name), 1)
+        player.CheckForItemThenAdd(itemObj, gameManager)
 
         player.SetGold(player.GetGold() - itemObj.price)
 
@@ -102,16 +93,6 @@ class ShopMenuManager(ItemMenuManager):
 
         
 
-
-
-    def OpenMenu(self, gameManager):
-        """Performs the necessary steps to init the shop menu for opening
-        """
-        #If the shop is already open, this will not run 
-        if self.showMenu == False:        
-            self.showMenu = True
-            self.SetMenuOrder(self.shopStock)
-            gameManager.activeMenus.insert(0, self)
 
 
 

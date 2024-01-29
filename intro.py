@@ -1,6 +1,7 @@
 import random
 import pgzrun
 from MenuManager import *
+from StorageMenuManager import StorageMenuManager
 from pgzhelper import *
 from GameItems import *
 import copy as copy
@@ -134,6 +135,11 @@ class InventoryManagerDraw:
         self.attachedInventoryManager.menuExitButton.draw()
         self.attachedInventoryManager.selectedItemBackground.draw()
         self.attachedInventoryManager.inventoryItemSelect.draw()
+
+        if self.attachedInventoryManager.curSort != -1000 and self.attachedInventoryManager.curSort != 1000:
+            print(self.attachedInventoryManager.curSort)
+            self.attachedInventoryManager.sortArrowIndicator.draw()
+
         for actor in self.attachedInventoryManager.drawList:
             actor.draw()
             actor.scale = actor.scale
@@ -143,6 +149,12 @@ class InventoryManagerDraw:
             else:
                 screen.draw.text("Buy", center = (1020, 498), color = "black", fontname = "old_englished_boots", fontsize = 45)
 
+
+        if self.attachedInventoryManager.menuName == "Home":
+            if self.attachedInventoryManager.menuEmpty == False:
+                screen.draw.text("Move", center = (1020, 498), color = "white", fontname = "old_englished_boots", fontsize = 45)
+            else:
+                screen.draw.text("Move", center = (1020, 498), color = "black", fontname = "old_englished_boots", fontsize = 45)
 
 
 
@@ -155,7 +167,8 @@ class InventoryManagerDraw:
         xOrient = manager.inventoryBackground.left
         yOrient = manager.inventoryBackground.top
 
-        screen.draw.text(self.attachedInventoryManager.menuName, center = (xOrient + (images.inventory_background.get_width()/2), yOrient + 40), color = "black", fontname = "old_englished_boots", fontsize = 45)
+        screen.draw.text("Page " + str(manager.menuPage + 1) + " " + manager.pageNames[manager.menuPage], midleft = (xOrient + 20, yOrient + 40), color = "black", fontname = "old_englished_boots", fontsize = 40)
+        screen.draw.text(manager.menuName, center = (xOrient + (images.inventory_background.get_width()/2), yOrient + 40), color = "black", fontname = "old_englished_boots", fontsize = 45)
         screen.draw.text("Name", midleft = (xOrient + 110, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
         screen.draw.text("Quantity", center = (xOrient+ 360, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
         screen.draw.text("Weight", center = (xOrient+ 470, yOrient + 90), color = "black", fontname = "old_englished_boots", fontsize = 35)
@@ -260,9 +273,12 @@ menuManager.AttachMenuDraw(menuDraw)
 shopMenuManager = ShopMenuManager()
 shopMenuManager.InitShopStockOnStart(gameManager)
 shopDraw = InventoryManagerDraw(shopMenuManager)
+storageMenuManager = StorageMenuManager()
+storageDraw = InventoryManagerDraw(storageMenuManager)
 shopMenuManager.AttachMenuDraw(shopDraw)
 inventoryManager.AttachMenuDraw(inventoryDraw)
-townManager = TownManager(gameManager, combatManager, menuManager, shopMenuManager, player1)
+storageMenuManager.AttachMenuDraw(storageDraw)
+townManager = TownManager(gameManager, combatManager, menuManager, shopMenuManager, storageMenuManager, player1)
 
 
 
@@ -358,6 +374,9 @@ def draw():
 
 turnStarted = False
 def update():
+    #print(storageMenuManager.curStorage)
+    #print(storageMenuManager.curMenuOrder)
+    print(player1.itemDict)
     global turnStarted
     gameManager.UpdateDisplayGold(player1)
     
@@ -531,7 +550,7 @@ def on_mouse_down(pos, button):
 
 
     if backPack.obb_collidepoint(pos[0], pos[1]) and inventoryManager.showMenu == False:
-        inventoryManager.OpenMenu(player1, gameManager)
+        inventoryManager.OpenMenu(gameManager, [player1.inventory])
         
 
     elif backPack.obb_collidepoint(pos[0], pos[1]) and inventoryManager.showMenu == True:
@@ -553,7 +572,7 @@ def on_mouse_down(pos, button):
 def on_key_down(key):
     #Opens the player menu with M
     if key == keys.M and inventoryManager.showMenu == False:
-        inventoryManager.OpenMenu(player1, gameManager)
+        inventoryManager.OpenMenu(gameManager, [player1.inventory])
 
     #This code moves the selected item position for whichever menu was opened last
     if len(gameManager.activeMenus) > 0:
@@ -563,12 +582,17 @@ def on_key_down(key):
         if key == keys.W:
             gameManager.activeMenus[0].MoveChoiceUp()
             return
-        
+        if key == keys.D:
+            gameManager.activeMenus[0].MovePageUp()
+            return
+        if key == keys.A:
+            gameManager.activeMenus[0].MovePageDown()
         if key == keys.ESCAPE:
             gameManager.activeMenus[0].CloseMenu(gameManager)
             return
         if key == keys.RETURN:
             gameManager.activeMenus[0].RunClassSpecificKeyDownMethods(player1, gameManager)
+            return
 
             
 

@@ -3,7 +3,7 @@ import pgzrun
 from pygame import Rect
 from MenuManager import MenuOption
 class TownManager:
-    def __init__(self, gameManager, combatManager, menuManager, shopManager, player):
+    def __init__(self, gameManager, combatManager, menuManager, shopManager, storageManager, player):
         houseRect = Rect((75, 300), (230, 600))
         shopRect = Rect((620, 300), (920, 600))
         tavernRect = Rect((1050, 250), (1280, 650))
@@ -16,7 +16,8 @@ class TownManager:
 
         
         self.menuOptionsHolder = [MenuOption("Depart", gameManager.CloseTownInitCombat, (combatManager, menuManager, player))]
-        self.menuOptionsHolder.append(MenuOption("Shop", shopManager.OpenMenu, ([gameManager])))
+        self.menuOptionsHolder.append(MenuOption("Shop", shopManager.OpenMenu, (gameManager, [shopManager.shopStock])))
+        self.menuOptionsHolder.append(MenuOption("Home", storageManager.OpenMenu, (gameManager, [storageManager.curStorage, player.inventory] )))
 
     def InitTownMenuOptions(self, menuManager):
         """Takes a list of menu options stored in the object and sets the menuManager option list to them

@@ -7,19 +7,10 @@ class InventoryManager(ItemMenuManager):
     """    
     
     def __init__(self):
-        super().__init__("Inventory")
+        super().__init__("Inventory", [""])
 
 
 
-    def OpenMenu(self, player, gameManager):
-        """Performs the necessary steps to init the Menu for opening
-
-        Args:
-            player (_Player_): player object whose Menu is being viewed
-        """        
-        self.showMenu = True
-        self.SetMenuOrder(player.inventory)
-        gameManager.activeMenus.insert(0, self)
 
 
     #All children of ItemMenuManager need these methods but they dont need to do anything
